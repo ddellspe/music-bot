@@ -6,12 +6,17 @@ import java.util.Collection;
 import java.util.List;
 import net.ddellspe.music.bot.audio.MusicAudioManager;
 import net.ddellspe.music.bot.commands.PrefixMessageResponseCommand;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /** Listener for dealing with commands with a prefix (so more data is available in the command) */
 public class PrefixMessageResponseCommandListener {
+  private static Logger LOGGER =
+      LoggerFactory.getLogger(PrefixMessageResponseCommandListener.class);
+
   private final Collection<PrefixMessageResponseCommand> commands;
 
   public PrefixMessageResponseCommandListener(ApplicationContext applicationContext) {
@@ -35,14 +40,7 @@ public class PrefixMessageResponseCommandListener {
                     || command.getFilterChannel(event.getGuildId().get()) == null))
         .filter(
             command ->
-                (manager.getPrefix() + command.getName())
-                    .equals(
-                        event
-                            .getMessage()
-                            .getContent()
-                            .substring(
-                                0,
-                                (manager.getPrefix().length() + command.getName().length() + 1))))
+                event.getMessage().getContent().startsWith(manager.getPrefix() + command.getName()))
         // Only one command will respond to the command, so limit the scope once we find it
         .next()
         .flatMap(command -> command.handle(event));
