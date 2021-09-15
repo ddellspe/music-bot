@@ -18,16 +18,15 @@ public class AutoLeave implements VoiceStateTrigger {
   }
 
   @Override
-  public Snowflake getFilterChannel(Snowflake guildId) {
-    MusicAudioManager manager = MusicAudioManager.of(guildId);
-    return manager.getVoiceChannel();
+  public Snowflake getFilterChannel(Snowflake guildId, VoiceStateUpdateEvent event) {
+    return getCurrentVoiceChannel(event);
   }
 
   @Override
   public Mono<Void> handle(VoiceStateUpdateEvent event) {
     Snowflake guildId = event.getCurrent().getGuildId();
     MusicAudioManager manager = MusicAudioManager.of(guildId);
-    Snowflake voiceChannelId = manager.getVoiceChannel();
+    Snowflake voiceChannelId = getCurrentVoiceChannel(event);
 
     final Mono<Boolean> nonBotChannelCountIsZero =
         event

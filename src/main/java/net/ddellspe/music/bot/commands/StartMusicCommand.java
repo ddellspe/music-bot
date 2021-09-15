@@ -4,6 +4,7 @@ import discord4j.common.util.Snowflake;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.VoiceState;
 import discord4j.core.object.entity.channel.VoiceChannel;
+import discord4j.rest.util.Color;
 import net.ddellspe.music.bot.audio.MusicAudioManager;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -26,7 +27,20 @@ public class StartMusicCommand implements MessageResponseCommand {
     // This will be guaranteed to be present since we're limiting to Join and Move events
     Snowflake guildId = event.getGuildId().get();
     MusicAudioManager manager = MusicAudioManager.of(guildId);
-    Snowflake voiceChannelId = manager.getVoiceChannel();
+    final Snowflake voiceChannelId = getCurrentVoiceChannel(event);
+
+    if (voiceChannelId == null) {
+      return event
+          .getMessage()
+          .getChannel()
+          .flatMap(
+              channel ->
+                  channel.createEmbed(
+                      spec ->
+                          spec.setColor(Color.RED)
+                              .setTitle("You must be in a voice channel to start the music bot.")))
+          .then();
+    }
 
     final Mono<Boolean> nonBotChannelCountIsGreaterThanZero =
         event
@@ -42,7 +56,7 @@ public class StartMusicCommand implements MessageResponseCommand {
         .getMessage()
         .getChannel()
         .filter(___ -> !manager.isStarted())
-        .flatMap(channel -> channel.createMessage("Starting Music Manager"))
+        .flatMap(channel -> channel.createMessage("Starting music bot"))
         .doOnNext(___ -> manager.start())
         .flatMap(channel -> event.getClient().getChannelById(voiceChannelId))
         .cast(VoiceChannel.class)

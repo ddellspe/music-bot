@@ -36,6 +36,10 @@ public class MusicAudioManager {
     return MANAGERS.computeIfAbsent(id, ignored -> new MusicAudioManager(id));
   }
 
+  public static void set(final Snowflake id, MusicAudioManager manager) {
+    MANAGERS.put(id, manager);
+  }
+
   private final AudioPlayer player;
   private final MusicAudioTrackScheduler scheduler;
   private final MusicAudioProvider provider;

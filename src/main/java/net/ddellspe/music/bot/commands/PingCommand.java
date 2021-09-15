@@ -2,6 +2,7 @@ package net.ddellspe.music.bot.commands;
 
 import discord4j.common.util.Snowflake;
 import discord4j.core.event.domain.message.MessageCreateEvent;
+import discord4j.core.object.entity.channel.MessageChannel;
 import net.ddellspe.music.bot.audio.MusicAudioManager;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -21,6 +22,8 @@ public class PingCommand implements SuperUserMessageResponseCommand {
 
   @Override
   public Mono<Void> handle(MessageCreateEvent event) {
+    Mono<MessageChannel> stuff = event.getMessage().getChannel();
+    MessageChannel mChannel = stuff.block();
     return event.getMessage().getChannel().flatMap(channel -> channel.createMessage("Pong")).then();
   }
 }
