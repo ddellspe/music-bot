@@ -2,6 +2,7 @@ package net.ddellspe.music.bot.commands;
 
 import discord4j.common.util.Snowflake;
 import discord4j.core.event.domain.message.MessageCreateEvent;
+import net.ddellspe.music.bot.audio.MusicAudioManager;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
@@ -14,7 +15,8 @@ public class PingCommand implements SuperUserMessageResponseCommand {
 
   @Override
   public Snowflake getFilterChannel(Snowflake guildId) {
-    return null;
+    MusicAudioManager manager = MusicAudioManager.of(guildId);
+    return manager.getChatChannel();
   }
 
   @Override
