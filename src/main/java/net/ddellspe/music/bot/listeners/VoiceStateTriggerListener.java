@@ -21,17 +21,7 @@ public class VoiceStateTriggerListener {
     return Flux.fromIterable(commands)
         .filter(___ -> !event.getCurrent().getUserId().equals(event.getClient().getSelfId()))
         .filter(command -> command.isCorrectEventType(event))
-        .filter(
-            command ->
-                ((event.getCurrent().getChannelId().isPresent()
-                        && command
-                            .getFilterChannel(event.getCurrent().getGuildId())
-                            .equals(event.getCurrent().getChannelId().get()))
-                    || event.getOld().isPresent()
-                        && event.getOld().get().getChannelId().isPresent()
-                        && command
-                            .getFilterChannel(event.getCurrent().getGuildId())
-                            .equals(event.getOld().get().getChannelId().get())))
+        .filter(command -> command.isCorrectChannel(event))
         // Multiple Audio Manager Trigger Commands may respond to a single event, so we can't use
         // next here
         .flatMap(command -> command.handle(event))

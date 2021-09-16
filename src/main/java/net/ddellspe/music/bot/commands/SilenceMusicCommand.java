@@ -28,9 +28,9 @@ public class SilenceMusicCommand implements MessageResponseCommand {
     final String message;
     if (manager.isStarted()) {
       manager.getScheduler().stop();
-      message = "Silencing Music Manager";
+      message = "Silencing music bot";
     } else {
-      message = "Music manager is not running, no audio playing, currently.";
+      message = "Music bot is not running, currently.";
     }
 
     return event
