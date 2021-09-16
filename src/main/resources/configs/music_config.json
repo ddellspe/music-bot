@@ -2,11 +2,6 @@
   {
     "guildId": 884566541402779718,
     "chatChannelId": 884566626165477437,
-    "prefix": "!"
-  },
-  {
-    "guildId": 375047219163824128,
-    "chatChannelId": 571148752514056225,
-    "prefix": "!"
+    "prefix": ">"
   }
 ]

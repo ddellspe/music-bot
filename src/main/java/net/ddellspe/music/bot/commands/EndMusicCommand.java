@@ -29,6 +29,7 @@ public class EndMusicCommand implements MessageResponseCommand {
     return event
         .getMessage()
         .getChannel()
+        .filter(___ -> manager.isStarted())
         .flatMap(channel -> channel.createMessage("Stopping music bot"))
         .doOnNext(___ -> manager.stop())
         .flatMap(___ -> event.getClient().getVoiceConnectionRegistry().getVoiceConnection(guildId))
