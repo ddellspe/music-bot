@@ -65,6 +65,15 @@ public class StartMusicCommand implements MessageResponseCommand {
         .flatMap(
             channel ->
                 channel.join(spec -> spec.setSelfDeaf(true).setProvider(manager.getProvider())))
+        .filter(voiceConnection -> Boolean.FALSE.equals(voiceConnection.isConnected().block()))
+        .doOnNext(___ -> manager.stop())
+        .flatMap(voiceConnection -> event.getMessage().getChannel())
+        .flatMap(
+            channel ->
+                channel.createEmbed(
+                    spec ->
+                        spec.setColor(Color.RED)
+                            .setTitle("Unable to join voice channel, shutting down.")))
         .then();
   }
 }
