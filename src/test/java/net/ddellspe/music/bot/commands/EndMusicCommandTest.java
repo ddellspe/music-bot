@@ -78,6 +78,39 @@ public class EndMusicCommandTest {
   }
 
   @Test
+  public void testStoppingWhenManagerIsStartedButFailsToStop() {
+    when(mockManager.isStarted()).thenReturn(true, true);
+    MessageCreateEvent mockEvent = Mockito.mock(MessageCreateEvent.class);
+    Message mockMessage = Mockito.mock(Message.class);
+    MessageChannel mockMessageChannel = Mockito.mock(MessageChannel.class);
+    GatewayDiscordClient mockClient = Mockito.mock(GatewayDiscordClient.class);
+    VoiceConnectionRegistry mockRegistry = Mockito.mock(VoiceConnectionRegistry.class);
+    VoiceConnection mockConnection = Mockito.mock(VoiceConnection.class);
+    Mono<MessageChannel> channel = Mono.just(mockMessageChannel);
+    Mono<VoiceConnection> connection = Mono.just(mockConnection);
+
+    when(mockEvent.getGuildId()).thenReturn(Optional.of(GUILD_ID));
+    when(mockEvent.getClient()).thenReturn(mockClient);
+    when(mockEvent.getMessage()).thenReturn(mockMessage);
+    when(mockMessage.getChannel()).thenReturn(channel);
+    when(mockMessageChannel.createMessage("Stopping music bot"))
+        .thenReturn(Mono.just(Mockito.mock(Message.class)));
+    when(mockClient.getVoiceConnectionRegistry()).thenReturn(mockRegistry);
+    when(mockRegistry.getVoiceConnection(GUILD_ID)).thenReturn(connection);
+    when(mockConnection.disconnect()).thenReturn(Mono.empty().then());
+
+    EndMusicCommand cmd = new EndMusicCommand();
+    cmd.handle(mockEvent).block();
+
+    StepVerifier.create(channel).expectNext(mockMessageChannel).verifyComplete();
+    StepVerifier.create(connection).expectNext(mockConnection).verifyComplete();
+    verify(mockMessageChannel, times(1)).createMessage("Stopping music bot");
+    verify(mockManager, times(1)).stop();
+    verify(mockConnection, times(0)).disconnect();
+    verify(mockManager, times(2)).isStarted();
+  }
+
+  @Test
   public void testStoppingWhenManagerIsNotStarted() {
     when(mockManager.isStarted()).thenReturn(false);
     MessageCreateEvent mockEvent = Mockito.mock(MessageCreateEvent.class);

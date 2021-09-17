@@ -22,7 +22,6 @@ jobs:
         run: mvn -B fmt:check
   run-tests:
     runs-on: ubuntu-latest
-    needs: check-code-quality
     steps:
       - uses: actions/checkout@v2
       - name: Set up JDK 11
@@ -34,7 +33,6 @@ jobs:
   build-and-deploy-docker-image:
     runs-on: ubuntu-latest
     if: github.event_name != 'pull_request'
-    needs: run-tests
     permissions:
       contents: read
       packages: write

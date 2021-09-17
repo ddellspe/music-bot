@@ -8,6 +8,8 @@ import discord4j.voice.VoiceConnection;
 import org.springframework.lang.Nullable;
 
 public interface MusicBotCommand {
+
+  @Nullable
   default Snowflake getCurrentVoiceChannel(VoiceStateUpdateEvent event) {
     Snowflake guildId = event.getCurrent().getGuildId();
     VoiceConnection connection =
