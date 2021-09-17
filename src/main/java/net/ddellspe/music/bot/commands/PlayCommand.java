@@ -29,8 +29,22 @@ public class PlayCommand implements PrefixMessageResponseCommand {
   public Mono<Void> handle(MessageCreateEvent event) {
     Snowflake guildId = event.getGuildId().get();
     MusicAudioManager manager = MusicAudioManager.of(guildId);
-
-    final String query = getMessageAfterPrefix(event);
+    final String query;
+    try {
+      query = getMessageAfterPrefix(event);
+    } catch (IndexOutOfBoundsException e) {
+      return event
+          .getMessage()
+          .getChannel()
+          .flatMap(
+              channel ->
+                  channel.createEmbed(
+                      spec ->
+                          spec.setColor(Color.RED)
+                              .setTitle(
+                                  "Invalid command: '" + event.getMessage().getContent() + "'")))
+          .then();
+    }
     final String messageForChannel;
     if (manager.isStarted()) {
       messageForChannel = null;
