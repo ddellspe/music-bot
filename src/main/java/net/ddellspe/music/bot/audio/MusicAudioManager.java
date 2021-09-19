@@ -101,10 +101,6 @@ public class MusicAudioManager {
     return configuration;
   }
 
-  public Snowflake getVoiceChannel() {
-    return configuration.getVoiceChannelId();
-  }
-
   public Snowflake getChatChannel() {
     return configuration.getChatChanelId();
   }

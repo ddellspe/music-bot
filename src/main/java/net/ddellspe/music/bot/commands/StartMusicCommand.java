@@ -5,6 +5,7 @@ import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.VoiceState;
 import discord4j.core.object.entity.channel.VoiceChannel;
 import discord4j.rest.util.Color;
+import discord4j.voice.VoiceConnection;
 import net.ddellspe.music.bot.audio.MusicAudioManager;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -56,24 +57,47 @@ public class StartMusicCommand implements MessageResponseCommand {
         .getMessage()
         .getChannel()
         .filter(___ -> !manager.isStarted())
-        .flatMap(channel -> channel.createMessage("Starting music bot"))
         .doOnNext(___ -> manager.start())
-        .flatMap(channel -> event.getClient().getChannelById(voiceChannelId))
+        .flatMap(message -> event.getClient().getChannelById(voiceChannelId))
         .cast(VoiceChannel.class)
         .filterWhen(___ -> nonBotChannelCountIsGreaterThanZero)
         .filter(___ -> manager.isStarted())
         .flatMap(
             channel ->
                 channel.join(spec -> spec.setSelfDeaf(true).setProvider(manager.getProvider())))
-        .filter(voiceConnection -> Boolean.FALSE.equals(voiceConnection.isConnected().block()))
-        .doOnNext(___ -> manager.stop())
-        .flatMap(voiceConnection -> event.getMessage().getChannel())
+        .onErrorResume(
+            e -> {
+              manager.stop();
+              event
+                  .getMessage()
+                  .getChannel()
+                  .flatMap(
+                      channel ->
+                          channel.createEmbed(
+                              spec ->
+                                  spec.setColor(Color.RED)
+                                      .setTitle(
+                                          "Unable to start the manager, make sure I have "
+                                              + "permissions in the voice channel that you "
+                                              + "are in.")))
+                  .subscribe();
+              return event.getClient().getVoiceConnectionRegistry().getVoiceConnection(guildId);
+            })
+        .filterWhen(VoiceConnection::isConnected)
+        .flatMap(VoiceConnection::getChannelId)
+        .flatMap(channelId -> event.getClient().getChannelById(channelId))
+        .cast(VoiceChannel.class)
+        .zipWith(event.getMessage().getChannel())
         .flatMap(
-            channel ->
-                channel.createEmbed(
-                    spec ->
-                        spec.setColor(Color.RED)
-                            .setTitle("Unable to join voice channel, shutting down.")))
+            objects -> {
+              return objects
+                  .getT2()
+                  .createEmbed(
+                      spec ->
+                          spec.setColor(Color.MEDIUM_SEA_GREEN)
+                              .setTitle("Music Bot Started")
+                              .addField("Joined Channel", objects.getT1().getName(), true));
+            })
         .then();
   }
 }
