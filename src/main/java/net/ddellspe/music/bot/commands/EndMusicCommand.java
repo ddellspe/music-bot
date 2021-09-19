@@ -27,12 +27,11 @@ public class EndMusicCommand implements MessageResponseCommand {
     MusicAudioManager manager = MusicAudioManager.of(guildId);
 
     return event
-        .getMessage()
-        .getChannel()
+        .getClient()
+        .getVoiceConnectionRegistry()
+        .getVoiceConnection(guildId)
         .filter(___ -> manager.isStarted())
-        .flatMap(channel -> channel.createMessage("Stopping music bot"))
         .doOnNext(___ -> manager.stop())
-        .flatMap(___ -> event.getClient().getVoiceConnectionRegistry().getVoiceConnection(guildId))
         .filter(___ -> !manager.isStarted())
         .flatMap(VoiceConnection::disconnect);
   }
