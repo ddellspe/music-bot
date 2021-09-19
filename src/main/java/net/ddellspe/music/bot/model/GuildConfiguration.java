@@ -10,9 +10,6 @@ public class GuildConfiguration {
   @JsonProperty("chatChannelId")
   private String chatChannelId;
 
-  @JsonProperty("voiceChannelId")
-  private String voiceChannelId;
-
   @JsonProperty("prefix")
   private String prefix;
 
@@ -22,10 +19,6 @@ public class GuildConfiguration {
 
   public Snowflake getChatChanelId() {
     return Snowflake.of(chatChannelId);
-  }
-
-  public Snowflake getVoiceChannelId() {
-    return Snowflake.of(voiceChannelId);
   }
 
   public String getCommandPrefix() {

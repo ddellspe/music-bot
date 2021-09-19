@@ -1,6 +1,8 @@
 package net.ddellspe.music.bot.commands;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -19,6 +21,7 @@ import discord4j.core.object.entity.channel.VoiceChannel;
 import discord4j.core.spec.EmbedCreateSpec;
 import discord4j.rest.util.Color;
 import discord4j.voice.VoiceConnection;
+import discord4j.voice.VoiceConnectionRegistry;
 import java.util.Optional;
 import java.util.function.Consumer;
 import net.ddellspe.music.bot.audio.MusicAudioManager;
@@ -90,38 +93,40 @@ public class StartMusicCommandTest {
   @Test
   public void testStartingWhenManagerIsStopped() {
     Snowflake voiceChannelId = Snowflake.of("111111");
+    String voiceChannelName = "Voice";
     when(mockManager.isStarted()).thenReturn(false, true);
+    Member mockMember = Mockito.mock(Member.class);
+    VoiceState mockVoiceState = Mockito.mock(VoiceState.class);
+    Mono<Member> member = Mono.just(mockMember);
     MessageCreateEvent mockEvent = Mockito.mock(MessageCreateEvent.class);
     GatewayDiscordClient mockClient = Mockito.mock(GatewayDiscordClient.class);
     VoiceChannel mockVoiceChannel = Mockito.mock(VoiceChannel.class);
     Mono<Channel> voiceChannel = Mono.just(mockVoiceChannel);
-    when(mockEvent.getGuildId()).thenReturn(Optional.of(GUILD_ID));
-    when(mockEvent.getClient()).thenReturn(mockClient);
-    when(mockClient.getChannelById(voiceChannelId)).thenReturn(voiceChannel);
-    initializeGetCurrentVoiceChannel(mockEvent, voiceChannelId);
-
-    // Initializing non-bot count
-    Member mockMember = Mockito.mock(Member.class);
-    VoiceState mockVoiceState = Mockito.mock(VoiceState.class);
-    Mono<Member> member = Mono.just(mockMember);
-    when(mockVoiceState.getMember()).thenReturn(member);
-    when(mockMember.isBot()).thenReturn(false);
-    when(mockVoiceChannel.getVoiceStates()).thenReturn(Flux.just(mockVoiceState));
-
     Message mockMessage = Mockito.mock(Message.class);
     MessageChannel mockMessageChannel = Mockito.mock(MessageChannel.class);
     VoiceConnection mockConnection = Mockito.mock(VoiceConnection.class);
     Mono<MessageChannel> channel = Mono.just(mockMessageChannel);
     Mono<VoiceConnection> connection = Mono.just(mockConnection);
+    VoiceConnectionRegistry mockRegistry = Mockito.mock(VoiceConnectionRegistry.class);
+    ArgumentCaptor<Consumer> consumerCaptor = ArgumentCaptor.forClass(Consumer.class);
 
+    when(mockEvent.getGuildId()).thenReturn(Optional.of(GUILD_ID));
+    when(mockEvent.getClient()).thenReturn(mockClient);
+    when(mockClient.getChannelById(voiceChannelId)).thenReturn(voiceChannel);
+    initializeGetCurrentVoiceChannel(mockEvent, voiceChannelId);
+    when(mockVoiceState.getMember()).thenReturn(member);
+    when(mockMember.isBot()).thenReturn(false);
+    when(mockVoiceChannel.getVoiceStates()).thenReturn(Flux.just(mockVoiceState));
     when(mockEvent.getMessage()).thenReturn(mockMessage);
     when(mockMessage.getChannel()).thenReturn(channel);
-    when(mockMessageChannel.createMessage("Starting music bot"))
-        .thenReturn(Mono.just(Mockito.mock(Message.class)));
     when(mockMessageChannel.createEmbed(any(Consumer.class)))
         .thenReturn(Mono.just(mock(Message.class)));
     when(mockVoiceChannel.join(any(Consumer.class))).thenReturn(connection);
+    when(mockClient.getVoiceConnectionRegistry()).thenReturn(mockRegistry);
+    when(mockRegistry.getVoiceConnection(GUILD_ID)).thenReturn(connection);
     when(mockConnection.isConnected()).thenReturn(Mono.just(Boolean.TRUE));
+    when(mockConnection.getChannelId()).thenReturn(Mono.just(voiceChannelId));
+    when(mockVoiceChannel.getName()).thenReturn(voiceChannelName);
 
     StartMusicCommand cmd = new StartMusicCommand();
     cmd.handle(mockEvent).block();
@@ -129,50 +134,62 @@ public class StartMusicCommandTest {
     StepVerifier.create(channel).expectNext(mockMessageChannel).verifyComplete();
     StepVerifier.create(connection).expectNext(mockConnection).verifyComplete();
     StepVerifier.create(member).expectNext(mockMember).verifyComplete();
-    verify(mockMessageChannel, times(1)).createMessage("Starting music bot");
+    StepVerifier.create(voiceChannel).expectNext(mockVoiceChannel).verifyComplete();
     verify(mockManager, times(1)).start();
     verify(mockManager, times(2)).isStarted();
+    verify(mockMessageChannel).createEmbed(consumerCaptor.capture());
+    Consumer<EmbedCreateSpec> messageSpecConsumer = consumerCaptor.getValue();
+    EmbedCreateSpec embedSpec = new EmbedCreateSpec();
+    messageSpecConsumer.accept(embedSpec);
+    assertEquals(Color.MEDIUM_SEA_GREEN, Color.of(embedSpec.asRequest().color().get()));
+    assertEquals("Music Bot Started", embedSpec.asRequest().title().get());
+    assertFalse(embedSpec.asRequest().fields().isAbsent());
+    assertEquals("Joined Channel", embedSpec.asRequest().fields().get().get(0).name());
+    assertEquals(voiceChannelName, embedSpec.asRequest().fields().get().get(0).value());
+    assertTrue(embedSpec.asRequest().fields().get().get(0).inline().get());
     // Testing the verification of the join spec would require a LOT of mocking, it's probably not
     // worth it to mock that behavior out just to validate the settings of the spec for code
     // coverage.
   }
 
   @Test
-  public void testStartingWhenManagerIsStoppedVoiceConnectionFails() {
+  public void testStartingWhenManagerIsStoppedAndStartingErrorsOut() {
     Snowflake voiceChannelId = Snowflake.of("111111");
     when(mockManager.isStarted()).thenReturn(false, true);
+    Member mockMember = Mockito.mock(Member.class);
+    VoiceState mockVoiceState = Mockito.mock(VoiceState.class);
+    Mono<Member> member = Mono.just(mockMember);
     MessageCreateEvent mockEvent = Mockito.mock(MessageCreateEvent.class);
     GatewayDiscordClient mockClient = Mockito.mock(GatewayDiscordClient.class);
     VoiceChannel mockVoiceChannel = Mockito.mock(VoiceChannel.class);
     Mono<Channel> voiceChannel = Mono.just(mockVoiceChannel);
-    when(mockEvent.getGuildId()).thenReturn(Optional.of(GUILD_ID));
-    when(mockEvent.getClient()).thenReturn(mockClient);
-    when(mockClient.getChannelById(voiceChannelId)).thenReturn(voiceChannel);
-    initializeGetCurrentVoiceChannel(mockEvent, voiceChannelId);
-
-    // Initializing non-bot count
-    Member mockMember = Mockito.mock(Member.class);
-    VoiceState mockVoiceState = Mockito.mock(VoiceState.class);
-    Mono<Member> member = Mono.just(mockMember);
-    when(mockVoiceState.getMember()).thenReturn(member);
-    when(mockMember.isBot()).thenReturn(false);
-    when(mockVoiceChannel.getVoiceStates()).thenReturn(Flux.just(mockVoiceState));
-
     Message mockMessage = Mockito.mock(Message.class);
     MessageChannel mockMessageChannel = Mockito.mock(MessageChannel.class);
     VoiceConnection mockConnection = Mockito.mock(VoiceConnection.class);
     Mono<MessageChannel> channel = Mono.just(mockMessageChannel);
     Mono<VoiceConnection> connection = Mono.just(mockConnection);
+    VoiceConnectionRegistry mockRegistry = Mockito.mock(VoiceConnectionRegistry.class);
     ArgumentCaptor<Consumer> consumerCaptor = ArgumentCaptor.forClass(Consumer.class);
 
+    when(mockEvent.getGuildId()).thenReturn(Optional.of(GUILD_ID));
+    when(mockEvent.getClient()).thenReturn(mockClient);
+    when(mockClient.getChannelById(voiceChannelId)).thenReturn(voiceChannel);
+    initializeGetCurrentVoiceChannel(mockEvent, voiceChannelId);
+    when(mockVoiceState.getMember()).thenReturn(member);
+    when(mockMember.isBot()).thenReturn(false);
+    when(mockVoiceChannel.getVoiceStates()).thenReturn(Flux.just(mockVoiceState));
     when(mockEvent.getMessage()).thenReturn(mockMessage);
     when(mockMessage.getChannel()).thenReturn(channel);
-    when(mockMessageChannel.createMessage("Starting music bot"))
-        .thenReturn(Mono.just(Mockito.mock(Message.class)));
-    when(mockVoiceChannel.join(any(Consumer.class))).thenReturn(connection);
-    when(mockConnection.isConnected()).thenReturn(Mono.just(Boolean.FALSE));
     when(mockMessageChannel.createEmbed(any(Consumer.class)))
         .thenReturn(Mono.just(mock(Message.class)));
+    when(mockVoiceChannel.join(any(Consumer.class))).thenThrow(RuntimeException.class);
+    when(mockClient.getVoiceConnectionRegistry()).thenReturn(mockRegistry);
+    when(mockRegistry.getVoiceConnection(GUILD_ID)).thenReturn(connection);
+
+    // This wouldn't be called in reality, the onErrorResume will not make it to the next
+    // filterWhen, we're just doing this because we can't create the test case properly and don't
+    // want the further actions to take place
+    when(mockConnection.isConnected()).thenReturn(Mono.just(Boolean.FALSE));
 
     StartMusicCommand cmd = new StartMusicCommand();
     cmd.handle(mockEvent).block();
@@ -180,7 +197,7 @@ public class StartMusicCommandTest {
     StepVerifier.create(channel).expectNext(mockMessageChannel).verifyComplete();
     StepVerifier.create(connection).expectNext(mockConnection).verifyComplete();
     StepVerifier.create(member).expectNext(mockMember).verifyComplete();
-    verify(mockMessageChannel, times(1)).createMessage("Starting music bot");
+    StepVerifier.create(voiceChannel).expectNext(mockVoiceChannel).verifyComplete();
     verify(mockManager, times(1)).start();
     verify(mockManager, times(1)).stop();
     verify(mockManager, times(2)).isStarted();
@@ -190,7 +207,12 @@ public class StartMusicCommandTest {
     messageSpecConsumer.accept(embedSpec);
     assertEquals(Color.RED, Color.of(embedSpec.asRequest().color().get()));
     assertEquals(
-        "Unable to join voice channel, shutting down.", embedSpec.asRequest().title().get());
+        "Unable to start the manager, make sure I have permissions in the voice channel "
+            + "that you are in.",
+        embedSpec.asRequest().title().get());
+    // Testing the verification of the join spec would require a LOT of mocking, it's probably not
+    // worth it to mock that behavior out just to validate the settings of the spec for code
+    // coverage.
   }
 
   @Test
@@ -251,8 +273,6 @@ public class StartMusicCommandTest {
 
     when(mockEvent.getMessage()).thenReturn(mockMessage);
     when(mockMessage.getChannel()).thenReturn(channel);
-    when(mockMessageChannel.createMessage("Starting music bot"))
-        .thenReturn(Mono.just(Mockito.mock(Message.class)));
 
     StartMusicCommand cmd = new StartMusicCommand();
     cmd.handle(mockEvent).block();
@@ -260,7 +280,6 @@ public class StartMusicCommandTest {
     StepVerifier.create(channel).expectNext(mockMessageChannel).verifyComplete();
     StepVerifier.create(connection).expectNext(mockConnection).verifyComplete();
     StepVerifier.create(member).expectNext(mockMember).verifyComplete();
-    verify(mockMessageChannel, times(1)).createMessage("Starting music bot");
     verify(mockManager, times(1)).start();
     verify(mockManager, times(1)).isStarted();
   }
