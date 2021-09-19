@@ -2,6 +2,7 @@ package net.ddellspe.music.bot.commands;
 
 import discord4j.common.util.Snowflake;
 import discord4j.core.event.domain.message.MessageCreateEvent;
+import discord4j.rest.util.Color;
 import net.ddellspe.music.bot.audio.MusicAudioManager;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -25,18 +26,27 @@ public class SilenceMusicCommand implements MessageResponseCommand {
     Snowflake guildId = event.getGuildId().get();
     MusicAudioManager manager = MusicAudioManager.of(guildId);
 
-    final String message;
     if (manager.isStarted()) {
       manager.getScheduler().stop();
-      message = "Silencing music bot";
+      return event
+          .getMessage()
+          .getChannel()
+          .flatMap(
+              channel ->
+                  channel.createEmbed(
+                      spec ->
+                          spec.setColor(Color.MEDIUM_SEA_GREEN)
+                              .setTitle("Music has been silenced")))
+          .then();
     } else {
-      message = "Music bot is not running, currently.";
+      return event
+          .getMessage()
+          .getChannel()
+          .flatMap(
+              channel ->
+                  channel.createEmbed(
+                      spec -> spec.setColor(Color.RED).setTitle("Music bot is not running")))
+          .then();
     }
-
-    return event
-        .getMessage()
-        .getChannel()
-        .flatMap(channel -> channel.createMessage(message))
-        .then();
   }
 }
