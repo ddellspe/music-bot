@@ -247,6 +247,9 @@
                         <volumes>
                             <volume>/app/resources/configs/</volume>
                         </volumes>
+                        <ports>
+                            <port>8080</port>
+                        </ports>
                         <labels>
                             <org.opencontainers.image.source>https://github.com/ddellspe/${project.artifactId}</org.opencontainers.image.source>
                         </labels>
