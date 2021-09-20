@@ -8,7 +8,7 @@ import reactor.core.publisher.Mono;
 public interface VoiceStateTrigger extends MusicBotCommand {
   boolean isCorrectEventType(VoiceStateUpdateEvent event);
 
-  Snowflake getFilterChannel(Snowflake guildId, VoiceStateUpdateEvent event);
+  Snowflake getFilterChannel(VoiceStateUpdateEvent event);
 
   Mono<Void> handle(VoiceStateUpdateEvent event);
 

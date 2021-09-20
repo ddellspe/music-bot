@@ -159,7 +159,7 @@ public class VoiceStateTriggerTest {
     }
 
     @Override
-    public Snowflake getFilterChannel(Snowflake guildId, VoiceStateUpdateEvent event) {
+    public Snowflake getFilterChannel(VoiceStateUpdateEvent event) {
       return null;
     }
 
