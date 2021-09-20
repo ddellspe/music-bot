@@ -110,10 +110,10 @@ public class StartMusicCommandTest {
     VoiceConnectionRegistry mockRegistry = Mockito.mock(VoiceConnectionRegistry.class);
     ArgumentCaptor<Consumer> consumerCaptor = ArgumentCaptor.forClass(Consumer.class);
 
+    initializeGetCurrentVoiceChannel(mockEvent, voiceChannelId);
     when(mockEvent.getGuildId()).thenReturn(Optional.of(GUILD_ID));
     when(mockEvent.getClient()).thenReturn(mockClient);
     when(mockClient.getChannelById(voiceChannelId)).thenReturn(voiceChannel);
-    initializeGetCurrentVoiceChannel(mockEvent, voiceChannelId);
     when(mockVoiceState.getMember()).thenReturn(member);
     when(mockMember.isBot()).thenReturn(false);
     when(mockVoiceChannel.getVoiceStates()).thenReturn(Flux.just(mockVoiceState));
@@ -171,10 +171,10 @@ public class StartMusicCommandTest {
     VoiceConnectionRegistry mockRegistry = Mockito.mock(VoiceConnectionRegistry.class);
     ArgumentCaptor<Consumer> consumerCaptor = ArgumentCaptor.forClass(Consumer.class);
 
+    initializeGetCurrentVoiceChannel(mockEvent, voiceChannelId);
     when(mockEvent.getGuildId()).thenReturn(Optional.of(GUILD_ID));
     when(mockEvent.getClient()).thenReturn(mockClient);
     when(mockClient.getChannelById(voiceChannelId)).thenReturn(voiceChannel);
-    initializeGetCurrentVoiceChannel(mockEvent, voiceChannelId);
     when(mockVoiceState.getMember()).thenReturn(member);
     when(mockMember.isBot()).thenReturn(false);
     when(mockVoiceChannel.getVoiceStates()).thenReturn(Flux.just(mockVoiceState));
@@ -223,15 +223,14 @@ public class StartMusicCommandTest {
     GatewayDiscordClient mockClient = Mockito.mock(GatewayDiscordClient.class);
     VoiceChannel mockVoiceChannel = Mockito.mock(VoiceChannel.class);
     Mono<Channel> voiceChannel = Mono.just(mockVoiceChannel);
-    when(mockEvent.getGuildId()).thenReturn(Optional.of(GUILD_ID));
-    when(mockEvent.getClient()).thenReturn(mockClient);
-    when(mockClient.getChannelById(voiceChannelId)).thenReturn(voiceChannel);
-    initializeGetCurrentVoiceChannel(mockEvent, voiceChannelId);
-
     Message mockMessage = Mockito.mock(Message.class);
     MessageChannel mockMessageChannel = Mockito.mock(MessageChannel.class);
     Mono<MessageChannel> channel = Mono.just(mockMessageChannel);
 
+    initializeGetCurrentVoiceChannel(mockEvent, voiceChannelId);
+    when(mockEvent.getGuildId()).thenReturn(Optional.of(GUILD_ID));
+    when(mockEvent.getClient()).thenReturn(mockClient);
+    when(mockClient.getChannelById(voiceChannelId)).thenReturn(voiceChannel);
     when(mockEvent.getMessage()).thenReturn(mockMessage);
     when(mockMessage.getChannel()).thenReturn(channel);
 
@@ -239,7 +238,6 @@ public class StartMusicCommandTest {
     cmd.handle(mockEvent).block();
 
     StepVerifier.create(channel).expectNext(mockMessageChannel).verifyComplete();
-    verify(mockMessageChannel, times(0)).createMessage("Starting music bot");
     verify(mockManager, times(0)).start();
     verify(mockManager, times(1)).isStarted();
   }
@@ -252,25 +250,22 @@ public class StartMusicCommandTest {
     GatewayDiscordClient mockClient = Mockito.mock(GatewayDiscordClient.class);
     VoiceChannel mockVoiceChannel = Mockito.mock(VoiceChannel.class);
     Mono<Channel> voiceChannel = Mono.just(mockVoiceChannel);
-    when(mockEvent.getGuildId()).thenReturn(Optional.of(GUILD_ID));
-    when(mockEvent.getClient()).thenReturn(mockClient);
-    when(mockClient.getChannelById(voiceChannelId)).thenReturn(voiceChannel);
-    initializeGetCurrentVoiceChannel(mockEvent, voiceChannelId);
-
-    // Initializing non-bot count
     Member mockMember = Mockito.mock(Member.class);
     VoiceState mockVoiceState = Mockito.mock(VoiceState.class);
     Mono<Member> member = Mono.just(mockMember);
-    when(mockVoiceState.getMember()).thenReturn(member);
-    when(mockMember.isBot()).thenReturn(true);
-    when(mockVoiceChannel.getVoiceStates()).thenReturn(Flux.just(mockVoiceState));
-
     Message mockMessage = Mockito.mock(Message.class);
     MessageChannel mockMessageChannel = Mockito.mock(MessageChannel.class);
     VoiceConnection mockConnection = Mockito.mock(VoiceConnection.class);
     Mono<MessageChannel> channel = Mono.just(mockMessageChannel);
     Mono<VoiceConnection> connection = Mono.just(mockConnection);
 
+    initializeGetCurrentVoiceChannel(mockEvent, voiceChannelId);
+    when(mockEvent.getGuildId()).thenReturn(Optional.of(GUILD_ID));
+    when(mockEvent.getClient()).thenReturn(mockClient);
+    when(mockClient.getChannelById(voiceChannelId)).thenReturn(voiceChannel);
+    when(mockVoiceState.getMember()).thenReturn(member);
+    when(mockMember.isBot()).thenReturn(true);
+    when(mockVoiceChannel.getVoiceStates()).thenReturn(Flux.just(mockVoiceState));
     when(mockEvent.getMessage()).thenReturn(mockMessage);
     when(mockMessage.getChannel()).thenReturn(channel);
 
