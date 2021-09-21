@@ -42,22 +42,24 @@ public class PlayCommand implements PrefixMessageResponseCommand {
                                   "Invalid command: '" + event.getMessage().getContent() + "'")))
           .then();
     }
-    final String messageForChannel;
     if (manager.isStarted()) {
-      messageForChannel = null;
       MusicAudioManager.PLAYER_MANAGER.loadItemOrdered(
           manager, query, new MusicAudioLoadResultHandler(event, query));
+      return Mono.empty().then();
     } else {
-      messageForChannel =
-          "Music Manager is not started, please type the command, "
-              + manager.getPrefix()
-              + "start to start the Music Manager.";
+      return event
+          .getMessage()
+          .getChannel()
+          .flatMap(
+              channel ->
+                  channel.createEmbed(
+                      spec ->
+                          spec.setColor(Color.ORANGE)
+                              .setTitle(
+                                  "Bot not started, please use the command: '"
+                                      + manager.getPrefix()
+                                      + "start' to start the bot")))
+          .then();
     }
-    return event
-        .getMessage()
-        .getChannel()
-        .filter(___ -> messageForChannel != null)
-        .flatMap(channel -> channel.createMessage(messageForChannel))
-        .then();
   }
 }
