@@ -20,7 +20,7 @@ import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
 public class MusicAudioManager {
 
-  public static final AudioPlayerManager PLAYER_MANAGER;
+  public static AudioPlayerManager PLAYER_MANAGER;
 
   static {
     PLAYER_MANAGER = new DefaultAudioPlayerManager();

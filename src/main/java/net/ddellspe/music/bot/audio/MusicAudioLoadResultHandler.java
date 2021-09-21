@@ -17,6 +17,14 @@ public class MusicAudioLoadResultHandler implements AudioLoadResultHandler {
     this.query = query;
   }
 
+  public MessageCreateEvent getEvent() {
+    return event;
+  }
+
+  public String getQuery() {
+    return query;
+  }
+
   @Override
   public void trackLoaded(AudioTrack audioTrack) {
     MusicAudioManager manager = MusicAudioManager.of(event.getGuildId().get());
