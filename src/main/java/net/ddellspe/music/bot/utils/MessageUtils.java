@@ -8,9 +8,9 @@ public class MessageUtils {
     long minutes = seconds / 60;
     seconds -= minutes * 60;
     return hours > 0
-        ? String.format("%02d:%02d:%02d", hours, minutes, seconds)
+        ? String.format("%d:%02d:%02d", hours, minutes, seconds)
         : (minutes > 0
-            ? String.format("%02d:%02d", minutes, seconds)
-            : String.format("%02d sec.", seconds));
+            ? String.format("%d:%02d", minutes, seconds)
+            : String.format("%d sec.", seconds));
   }
 }

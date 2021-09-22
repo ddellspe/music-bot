@@ -184,8 +184,14 @@
                                             <limit>
                                                 <counter>LINE</counter>
                                                 <value>COVEREDRATIO</value>
-                                                <minimum>0.47</minimum>
+                                                <minimum>0.50</minimum>
                                             </limit>
+                                            <!-- Once Testing is all done, we'll uncomment this, but we want 100% branch coverage. -->
+                                            <!--<limit>
+                                                <counter>BRANCH</counter>
+                                                <value>COVEREDRATIO</value>
+                                                <minimum>1.00</minimum>
+                                            </limit>-->
                                         </limits>
                                     </rule>
                                 </rules>
