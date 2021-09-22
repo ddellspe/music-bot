@@ -12,13 +12,21 @@ public class MusicAudioTrackScheduler extends AudioEventAdapter {
   private final List<AudioTrack> queue;
   private final AudioPlayer player;
 
-  public MusicAudioTrackScheduler(final AudioPlayer player) {
-    queue = Collections.synchronizedList(new LinkedList<>());
+  public MusicAudioTrackScheduler(final AudioPlayer player, final List<AudioTrack> queue) {
+    this.queue = queue;
     this.player = player;
+  }
+
+  public MusicAudioTrackScheduler(final AudioPlayer player) {
+    this(player, Collections.synchronizedList(new LinkedList<>()));
   }
 
   public List<AudioTrack> getQueue() {
     return queue;
+  }
+
+  public AudioPlayer getPlayer() {
+    return player;
   }
 
   public boolean play(final AudioTrack track) {
