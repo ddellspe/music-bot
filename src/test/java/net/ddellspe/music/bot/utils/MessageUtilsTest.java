@@ -2,9 +2,15 @@ package net.ddellspe.music.bot.utils;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 public class MessageUtilsTest {
+  @BeforeEach
+  public void before() {
+    // this is to appease jacoco for lines of coverage
+    new MessageUtils();
+  }
 
   @Test
   public void testDurationUnderTenSeconds() {

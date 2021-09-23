@@ -18,6 +18,14 @@ public class MusicAudioProvider extends AudioProvider {
     this.player = player;
   }
 
+  public AudioPlayer getPlayer() {
+    return player;
+  }
+
+  public MutableAudioFrame getFrame() {
+    return frame;
+  }
+
   @Override
   public boolean provide() {
     final boolean didProvide = player.provide(frame);
