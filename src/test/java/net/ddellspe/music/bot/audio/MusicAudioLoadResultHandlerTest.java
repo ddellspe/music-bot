@@ -53,7 +53,18 @@ public class MusicAudioLoadResultHandlerTest {
   }
 
   @Test
-  public void testTrackLoaded() {
+  public void testTrackLoadedPlaying() {
+    AudioTrack mockAudioTrack = Mockito.mock(AudioTrack.class);
+    when(mockScheduler.play(mockAudioTrack)).thenReturn(true);
+
+    MusicAudioLoadResultHandler handler = new MusicAudioLoadResultHandler(mockEvent, query);
+    handler.trackLoaded(mockAudioTrack);
+
+    verify(mockScheduler, times(1)).play(mockAudioTrack);
+  }
+
+  @Test
+  public void testTrackLoadedNotPlaying() {
     Message mockMessage = Mockito.mock(Message.class);
     MessageChannel mockChannel = Mockito.mock(MessageChannel.class);
     AudioTrack mockAudioTrack = Mockito.mock(AudioTrack.class);
@@ -62,6 +73,7 @@ public class MusicAudioLoadResultHandlerTest {
     ArgumentCaptor<Consumer<EmbedCreateSpec>> consumerCaptor =
         ArgumentCaptor.forClass(Consumer.class);
 
+    when(mockScheduler.play(mockAudioTrack)).thenReturn(false);
     when(mockEvent.getMessage()).thenReturn(mockMessage);
     when(mockMessage.getChannel()).thenReturn(Mono.just(mockChannel));
     when(mockChannel.createEmbed(any(Consumer.class))).thenReturn(Mono.empty());
@@ -76,7 +88,7 @@ public class MusicAudioLoadResultHandlerTest {
     EmbedCreateSpec embedSpec = new EmbedCreateSpec();
     messageSpecConsumer.accept(embedSpec);
     assertEquals(Color.MEDIUM_SEA_GREEN, Color.of(embedSpec.asRequest().color().get()));
-    assertEquals("Added Track to queue", embedSpec.asRequest().title().get());
+    assertEquals("Added track to queue", embedSpec.asRequest().title().get());
     assertEquals(3, embedSpec.asRequest().fields().get().size());
     assertEquals("Track Title", embedSpec.asRequest().fields().get().get(0).name());
     assertEquals("Title", embedSpec.asRequest().fields().get().get(0).value());
@@ -87,7 +99,23 @@ public class MusicAudioLoadResultHandlerTest {
   }
 
   @Test
-  public void testPlayListLoaded() {
+  public void testPlayListLoadedPlaying() {
+    AudioTrack mockAudioTrack = Mockito.mock(AudioTrack.class);
+    AudioPlaylist mockPlaylist = Mockito.mock(AudioPlaylist.class);
+    ArgumentCaptor<Consumer<EmbedCreateSpec>> consumerCaptor =
+        ArgumentCaptor.forClass(Consumer.class);
+
+    when(mockPlaylist.getTracks()).thenReturn(List.of(mockAudioTrack));
+    when(mockScheduler.play(mockAudioTrack)).thenReturn(true);
+
+    MusicAudioLoadResultHandler handler = new MusicAudioLoadResultHandler(mockEvent, query);
+    handler.playlistLoaded(mockPlaylist);
+
+    verify(mockScheduler, times(1)).play(mockAudioTrack);
+  }
+
+  @Test
+  public void testPlayListLoadedNotPlaying() {
     Message mockMessage = Mockito.mock(Message.class);
     MessageChannel mockChannel = Mockito.mock(MessageChannel.class);
     AudioTrack mockAudioTrack = Mockito.mock(AudioTrack.class);
@@ -98,6 +126,7 @@ public class MusicAudioLoadResultHandlerTest {
         ArgumentCaptor.forClass(Consumer.class);
 
     when(mockEvent.getMessage()).thenReturn(mockMessage);
+    when(mockScheduler.play(mockAudioTrack)).thenReturn(false);
     when(mockMessage.getChannel()).thenReturn(Mono.just(mockChannel));
     when(mockChannel.createEmbed(any(Consumer.class))).thenReturn(Mono.empty());
     when(mockAudioTrack.getInfo()).thenReturn(mockAudioTrackInfo);
@@ -112,7 +141,7 @@ public class MusicAudioLoadResultHandlerTest {
     EmbedCreateSpec embedSpec = new EmbedCreateSpec();
     messageSpecConsumer.accept(embedSpec);
     assertEquals(Color.MEDIUM_SEA_GREEN, Color.of(embedSpec.asRequest().color().get()));
-    assertEquals("Added Track to queue", embedSpec.asRequest().title().get());
+    assertEquals("Added track to queue", embedSpec.asRequest().title().get());
     assertEquals(3, embedSpec.asRequest().fields().get().size());
     assertEquals("Track Title", embedSpec.asRequest().fields().get().get(0).name());
     assertEquals("Title", embedSpec.asRequest().fields().get().get(0).value());

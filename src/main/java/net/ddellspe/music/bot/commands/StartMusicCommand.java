@@ -57,7 +57,7 @@ public class StartMusicCommand implements MessageResponseCommand {
         .getMessage()
         .getChannel()
         .filter(___ -> !manager.isStarted())
-        .doOnNext(___ -> manager.start())
+        .doOnNext(___ -> manager.start(event.getClient()))
         .flatMap(message -> event.getClient().getChannelById(voiceChannelId))
         .cast(VoiceChannel.class)
         .filterWhen(___ -> nonBotChannelCountIsGreaterThanZero)

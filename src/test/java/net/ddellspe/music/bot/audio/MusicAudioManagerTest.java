@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import discord4j.common.util.Snowflake;
+import discord4j.core.GatewayDiscordClient;
 import net.ddellspe.music.bot.model.GuildConfiguration;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -53,10 +54,13 @@ public class MusicAudioManagerTest {
   public void testStart() {
     Snowflake guildId = Snowflake.of("884566541402779718");
     AudioPlayer mockAudioPlayer = Mockito.mock(AudioPlayer.class);
+    MusicAudioTrackScheduler mockScheduler = Mockito.mock(MusicAudioTrackScheduler.class);
+    GatewayDiscordClient mockClient = Mockito.mock(GatewayDiscordClient.class);
     when(mockAudioManager.createPlayer()).thenReturn(mockAudioPlayer);
 
     MusicAudioManager manager = MusicAudioManager.of(guildId);
-    manager.start();
+    manager.setScheduler(mockScheduler);
+    manager.start(mockClient);
 
     assertTrue(manager.isStarted());
   }
@@ -66,14 +70,16 @@ public class MusicAudioManagerTest {
     Snowflake guildId = Snowflake.of("884566541402779718");
     AudioPlayer mockAudioPlayer = Mockito.mock(AudioPlayer.class);
     MusicAudioTrackScheduler mockScheduler = Mockito.mock(MusicAudioTrackScheduler.class);
+    GatewayDiscordClient mockClient = Mockito.mock(GatewayDiscordClient.class);
     when(mockAudioManager.createPlayer()).thenReturn(mockAudioPlayer);
 
     MusicAudioManager manager = MusicAudioManager.of(guildId);
     manager.setScheduler(mockScheduler);
-    manager.start();
+    manager.start(mockClient);
     manager.stop();
 
     assertFalse(manager.isStarted());
+    verify(mockScheduler, times(1)).setClient(mockClient);
     verify(mockScheduler, times(1)).stop();
   }
 }

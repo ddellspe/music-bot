@@ -4,21 +4,30 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
+import discord4j.common.util.Snowflake;
+import discord4j.core.GatewayDiscordClient;
+import discord4j.core.object.entity.channel.MessageChannel;
+import discord4j.rest.util.Color;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import net.ddellspe.music.bot.utils.MessageUtils;
 
 public class MusicAudioTrackScheduler extends AudioEventAdapter {
   private final List<AudioTrack> queue;
   private final AudioPlayer player;
+  private final MusicAudioManager manager;
+  private GatewayDiscordClient client;
 
-  public MusicAudioTrackScheduler(final AudioPlayer player, final List<AudioTrack> queue) {
-    this.queue = queue;
+  public MusicAudioTrackScheduler(
+      final AudioPlayer player, final MusicAudioManager manager, final List<AudioTrack> queue) {
     this.player = player;
+    this.manager = manager;
+    this.queue = queue;
   }
 
-  public MusicAudioTrackScheduler(final AudioPlayer player) {
-    this(player, Collections.synchronizedList(new LinkedList<>()));
+  public MusicAudioTrackScheduler(final AudioPlayer player, final MusicAudioManager manager) {
+    this(player, manager, Collections.synchronizedList(new LinkedList<>()));
   }
 
   public List<AudioTrack> getQueue() {
@@ -27,6 +36,18 @@ public class MusicAudioTrackScheduler extends AudioEventAdapter {
 
   public AudioPlayer getPlayer() {
     return player;
+  }
+
+  public GatewayDiscordClient getClient() {
+    return client;
+  }
+
+  public void setClient(GatewayDiscordClient client) {
+    this.client = client;
+  }
+
+  public MusicAudioManager getManager() {
+    return manager;
   }
 
   public boolean play(final AudioTrack track) {
@@ -38,6 +59,28 @@ public class MusicAudioTrackScheduler extends AudioEventAdapter {
 
     if (!playing) {
       queue.add(track);
+    } else {
+      // client should never be null in these cases, since the manager has to be started to play a
+      // track
+      if (client != null) {
+        Snowflake chatChannel = manager.getChatChannel();
+        client
+            .getChannelById(chatChannel)
+            .cast(MessageChannel.class)
+            .flatMap(
+                channel ->
+                    channel.createEmbed(
+                        spec ->
+                            spec.setColor(Color.MEDIUM_SEA_GREEN)
+                                .setTitle("Now Playing")
+                                .addField("Track Title", track.getInfo().title, false)
+                                .addField("Track Artist", track.getInfo().author, false)
+                                .addField(
+                                    "Duration",
+                                    MessageUtils.getDurationAsMinSecond(track.getInfo().length),
+                                    false)))
+            .subscribe();
+      }
     }
 
     return playing;

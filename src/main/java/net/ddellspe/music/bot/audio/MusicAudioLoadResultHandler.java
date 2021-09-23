@@ -28,30 +28,7 @@ public class MusicAudioLoadResultHandler implements AudioLoadResultHandler {
   @Override
   public void trackLoaded(AudioTrack audioTrack) {
     MusicAudioManager manager = MusicAudioManager.of(event.getGuildId().get());
-    manager.getScheduler().play(audioTrack);
-    event
-        .getMessage()
-        .getChannel()
-        .flatMap(
-            channel ->
-                channel.createEmbed(
-                    spec ->
-                        spec.setColor(Color.MEDIUM_SEA_GREEN)
-                            .setTitle("Added Track to queue")
-                            .addField("Track Title", audioTrack.getInfo().title, false)
-                            .addField("Track Artist", audioTrack.getInfo().author, false)
-                            .addField(
-                                "Duration",
-                                MessageUtils.getDurationAsMinSecond(audioTrack.getInfo().length),
-                                false)))
-        .subscribe();
-  }
-
-  @Override
-  public void playlistLoaded(AudioPlaylist audioPlaylist) {
-    MusicAudioManager manager = MusicAudioManager.of(event.getGuildId().get());
-    for (AudioTrack audioTrack : audioPlaylist.getTracks()) {
-      manager.getScheduler().play(audioTrack);
+    if (!manager.getScheduler().play(audioTrack)) {
       event
           .getMessage()
           .getChannel()
@@ -60,7 +37,7 @@ public class MusicAudioLoadResultHandler implements AudioLoadResultHandler {
                   channel.createEmbed(
                       spec ->
                           spec.setColor(Color.MEDIUM_SEA_GREEN)
-                              .setTitle("Added Track to queue")
+                              .setTitle("Added track to queue")
                               .addField("Track Title", audioTrack.getInfo().title, false)
                               .addField("Track Artist", audioTrack.getInfo().author, false)
                               .addField(
@@ -68,6 +45,32 @@ public class MusicAudioLoadResultHandler implements AudioLoadResultHandler {
                                   MessageUtils.getDurationAsMinSecond(audioTrack.getInfo().length),
                                   false)))
           .subscribe();
+    }
+  }
+
+  @Override
+  public void playlistLoaded(AudioPlaylist audioPlaylist) {
+    MusicAudioManager manager = MusicAudioManager.of(event.getGuildId().get());
+    for (AudioTrack audioTrack : audioPlaylist.getTracks()) {
+      if (!manager.getScheduler().play(audioTrack)) {
+        event
+            .getMessage()
+            .getChannel()
+            .flatMap(
+                channel ->
+                    channel.createEmbed(
+                        spec ->
+                            spec.setColor(Color.MEDIUM_SEA_GREEN)
+                                .setTitle("Added track to queue")
+                                .addField("Track Title", audioTrack.getInfo().title, false)
+                                .addField("Track Artist", audioTrack.getInfo().author, false)
+                                .addField(
+                                    "Duration",
+                                    MessageUtils.getDurationAsMinSecond(
+                                        audioTrack.getInfo().length),
+                                    false)))
+            .subscribe();
+      }
     }
   }
 
