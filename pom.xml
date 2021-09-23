@@ -250,6 +250,7 @@
                 <version>3.1.4</version>
                 <configuration>
                     <container>
+                        <creationTime>USE_CURRENT_TIMESTAMP</creationTime>
                         <volumes>
                             <volume>/app/resources/configs/</volume>
                         </volumes>
