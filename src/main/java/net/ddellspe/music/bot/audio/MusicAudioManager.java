@@ -8,6 +8,7 @@ import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
 import com.sedmelluq.discord.lavaplayer.track.playback.NonAllocatingAudioFrameBuffer;
 import discord4j.common.JacksonResources;
 import discord4j.common.util.Snowflake;
+import discord4j.core.GatewayDiscordClient;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -53,7 +54,7 @@ public class MusicAudioManager {
 
   private MusicAudioManager(Snowflake guildId) {
     player = PLAYER_MANAGER.createPlayer();
-    scheduler = new MusicAudioTrackScheduler(player);
+    scheduler = new MusicAudioTrackScheduler(player, this);
     provider = new MusicAudioProvider(player);
 
     player.addListener(scheduler);
@@ -93,7 +94,8 @@ public class MusicAudioManager {
     return provider;
   }
 
-  public void start() {
+  public void start(GatewayDiscordClient client) {
+    scheduler.setClient(client);
     started.set(true);
   }
 

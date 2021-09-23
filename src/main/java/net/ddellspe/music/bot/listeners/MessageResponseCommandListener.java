@@ -23,7 +23,6 @@ public class MessageResponseCommandListener {
     final List<Role> roles = event.getMember().get().getRoles().collectList().block();
 
     MusicAudioManager manager = MusicAudioManager.of(event.getGuildId().get());
-
     return Flux.fromIterable(commands)
         .filter(
             command ->
@@ -35,7 +34,8 @@ public class MessageResponseCommandListener {
                     || command.getFilterChannel(event.getGuildId().get()) == null))
         .filter(
             command ->
-                (manager.getPrefix() + command.getName()).equals(event.getMessage().getContent()))
+                (manager.getPrefix() + command.getName())
+                    .equals(event.getMessage().getContent().toLowerCase()))
         // Only one command will respond to the command, so limit the scope once we find it
         .next()
         .flatMap(command -> command.handle(event));

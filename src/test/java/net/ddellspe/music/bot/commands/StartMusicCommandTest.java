@@ -135,7 +135,7 @@ public class StartMusicCommandTest {
     StepVerifier.create(connection).expectNext(mockConnection).verifyComplete();
     StepVerifier.create(member).expectNext(mockMember).verifyComplete();
     StepVerifier.create(voiceChannel).expectNext(mockVoiceChannel).verifyComplete();
-    verify(mockManager, times(1)).start();
+    verify(mockManager, times(1)).start(mockClient);
     verify(mockManager, times(2)).isStarted();
     verify(mockMessageChannel).createEmbed(consumerCaptor.capture());
     Consumer<EmbedCreateSpec> messageSpecConsumer = consumerCaptor.getValue();
@@ -198,7 +198,7 @@ public class StartMusicCommandTest {
     StepVerifier.create(connection).expectNext(mockConnection).verifyComplete();
     StepVerifier.create(member).expectNext(mockMember).verifyComplete();
     StepVerifier.create(voiceChannel).expectNext(mockVoiceChannel).verifyComplete();
-    verify(mockManager, times(1)).start();
+    verify(mockManager, times(1)).start(mockClient);
     verify(mockManager, times(1)).stop();
     verify(mockManager, times(2)).isStarted();
     verify(mockMessageChannel).createEmbed(consumerCaptor.capture());
@@ -238,7 +238,7 @@ public class StartMusicCommandTest {
     cmd.handle(mockEvent).block();
 
     StepVerifier.create(channel).expectNext(mockMessageChannel).verifyComplete();
-    verify(mockManager, times(0)).start();
+    verify(mockManager, times(0)).start(any());
     verify(mockManager, times(1)).isStarted();
   }
 
@@ -275,7 +275,7 @@ public class StartMusicCommandTest {
     StepVerifier.create(channel).expectNext(mockMessageChannel).verifyComplete();
     StepVerifier.create(connection).expectNext(mockConnection).verifyComplete();
     StepVerifier.create(member).expectNext(mockMember).verifyComplete();
-    verify(mockManager, times(1)).start();
+    verify(mockManager, times(1)).start(mockClient);
     verify(mockManager, times(1)).isStarted();
   }
 

@@ -38,7 +38,9 @@ public class PrefixMessageResponseCommandListener {
                             .getChannelId()
                             .equals(command.getFilterChannel(event.getGuildId().get())))
                     || command.getFilterChannel(event.getGuildId().get()) == null))
-        .filter(command -> event.getMessage().getContent().startsWith(command.getPrefix(event)))
+        .filter(
+            command ->
+                event.getMessage().getContent().toLowerCase().startsWith(command.getPrefix(event)))
         // Only one command will respond to the command, so limit the scope once we find it
         .next()
         .flatMap(command -> command.handle(event));
