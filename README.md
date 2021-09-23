@@ -95,3 +95,14 @@ There is currently no support for generic searching via keyboard at this point, 
 When the bot finds the appropriate track to go along with the url, it will respond that it's been added to the queue.
 There will also be track information (Title, Artist, Duration) available in the response from the command.
 If the track isn't accessible or not found, the bot will provide an error response indicating such.
+
+### Skip
+| Command |
+| :-: |
+| `!skip` |
+
+This command ends the current song, if there is another song in the queue and moves to the next song.
+To initiate this command, in the specific chat channel send the message `!skip`.
+Upon calling of this command, the bot (if running) will skip to the next track.
+If there is no next track in the queue, it will send a message indicating that there is no track to skip to.
+If there is a next track, the bot will skip to the next track and the information for that track will be shown.
