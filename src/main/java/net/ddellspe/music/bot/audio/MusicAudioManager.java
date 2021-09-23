@@ -30,6 +30,11 @@ public class MusicAudioManager {
     AudioSourceManagers.registerLocalSource(PLAYER_MANAGER);
   }
 
+  /** This is necessary for testing */
+  public static void clearManagers() {
+    MANAGERS.clear();
+  }
+
   private static final Map<Snowflake, MusicAudioManager> MANAGERS = new ConcurrentHashMap<>();
 
   public static MusicAudioManager of(final Snowflake id) {
@@ -41,7 +46,7 @@ public class MusicAudioManager {
   }
 
   private final AudioPlayer player;
-  private final MusicAudioTrackScheduler scheduler;
+  private MusicAudioTrackScheduler scheduler;
   private final MusicAudioProvider provider;
   private final GuildConfiguration configuration;
   private final AtomicBoolean started;
@@ -74,6 +79,10 @@ public class MusicAudioManager {
 
   public AudioPlayer getPlayer() {
     return player;
+  }
+
+  public void setScheduler(MusicAudioTrackScheduler scheduler) {
+    this.scheduler = scheduler;
   }
 
   public MusicAudioTrackScheduler getScheduler() {
