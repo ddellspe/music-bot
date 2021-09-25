@@ -19,11 +19,11 @@ public class SuperUserMessageResponseCommandListener {
   }
 
   public Mono<Void> handle(MessageCreateEvent event) {
-
+    if (event.getMember().isEmpty()) {
+      return Mono.empty().then();
+    }
     final List<Role> roles = event.getMember().get().getRoles().collectList().block();
-
     MusicAudioManager manager = MusicAudioManager.of(event.getGuildId().get());
-
     return Flux.fromIterable(commands)
         .filter(___ -> roles.stream().anyMatch(role -> "DJ".equals(role.getName())))
         .filter(
