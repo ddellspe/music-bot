@@ -1,9 +1,7 @@
 package net.ddellspe.music.bot.listeners;
 
 import discord4j.core.event.domain.message.MessageCreateEvent;
-import discord4j.core.object.entity.Role;
 import java.util.Collection;
-import java.util.List;
 import net.ddellspe.music.bot.audio.MusicAudioManager;
 import net.ddellspe.music.bot.commands.MessageResponseCommand;
 import org.springframework.context.ApplicationContext;
@@ -19,9 +17,6 @@ public class MessageResponseCommandListener {
   }
 
   public Mono<Void> handle(MessageCreateEvent event) {
-
-    final List<Role> roles = event.getMember().get().getRoles().collectList().block();
-
     MusicAudioManager manager = MusicAudioManager.of(event.getGuildId().get());
     return Flux.fromIterable(commands)
         .filter(

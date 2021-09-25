@@ -1,6 +1,5 @@
 package net.ddellspe.music.bot.listeners;
 
-import discord4j.common.util.Snowflake;
 import discord4j.core.event.domain.VoiceStateUpdateEvent;
 import java.util.Collection;
 import net.ddellspe.music.bot.commands.VoiceStateTrigger;
@@ -17,7 +16,6 @@ public class VoiceStateTriggerListener {
   }
 
   public Mono<Void> handle(VoiceStateUpdateEvent event) {
-    Snowflake guildId = event.getCurrent().getGuildId();
     return Flux.fromIterable(commands)
         .filter(___ -> !event.getCurrent().getUserId().equals(event.getClient().getSelfId()))
         .filter(command -> command.isCorrectEventType(event))

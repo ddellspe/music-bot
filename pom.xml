@@ -177,6 +177,10 @@
                                 <goal>check</goal>
                             </goals>
                             <configuration>
+                                <excludes>
+                                    <!-- Excluding the main class since it is not really possible to test. -->
+                                    <exclude>net/ddellspe/music/MusicBot.class</exclude>
+                                </excludes>
                                 <rules>
                                     <rule>
                                         <element>BUNDLE</element>
@@ -184,14 +188,14 @@
                                             <limit>
                                                 <counter>LINE</counter>
                                                 <value>COVEREDRATIO</value>
-                                                <minimum>0.79</minimum>
+                                                <minimum>0.99</minimum>
                                             </limit>
                                             <!-- Once Testing is all done, we'll uncomment this, but we want 100% branch coverage. -->
-                                            <!--<limit>
+                                            <limit>
                                                 <counter>BRANCH</counter>
                                                 <value>COVEREDRATIO</value>
                                                 <minimum>1.00</minimum>
-                                            </limit>-->
+                                            </limit>
                                         </limits>
                                     </rule>
                                 </rules>
