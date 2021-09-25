@@ -28,12 +28,12 @@ public class MusicBot {
         .build()
         .withGateway(
             gatewayClient -> {
-              SuperUserMessageResponseCommandListener SuoerUsermessageResponseCommandListener =
+              SuperUserMessageResponseCommandListener superUsermessageResponseCommandListener =
                   new SuperUserMessageResponseCommandListener(springContext);
 
               Mono<Void> onSuperUserMessageResponseCommand =
                   gatewayClient
-                      .on(MessageCreateEvent.class, SuoerUsermessageResponseCommandListener::handle)
+                      .on(MessageCreateEvent.class, superUsermessageResponseCommandListener::handle)
                       .then();
 
               MessageResponseCommandListener messageResponseCommandListener =
