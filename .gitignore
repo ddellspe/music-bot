@@ -14,5 +14,5 @@
 # Maven
 log/
 target/
-
+*release*
 dependency-reduced-pom.xml
