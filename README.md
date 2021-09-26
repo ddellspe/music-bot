@@ -1,4 +1,6 @@
 # Music Bot
+[![build-test-and-deploy](https://github.com/ddellspe/music-bot/actions/workflows/build-and-test.yml/badge.svg?branch=main)](https://github.com/ddellspe/music-bot/actions/workflows/build-and-test.yml)
+
 Music Bot is a site/discord bot set up to provide soundtrack-like support for discord servers.
 Information about the tools and even how to run your own bot can be found below.
 This Music bot provides you self-hosted capabilities similar to what [Groovy](https://groovy.bot/)
