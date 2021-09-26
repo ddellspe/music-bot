@@ -5,6 +5,10 @@ import discord4j.core.event.domain.message.MessageCreateEvent;
 import net.ddellspe.music.bot.audio.MusicAudioManager;
 import reactor.core.publisher.Mono;
 
+/**
+ * This is a command that supports triggering with arguments, this supports a prefix (command) plus
+ * argument(s) and those arguments are then able to be processed further by the handle command.
+ */
 public interface PrefixMessageResponseCommand extends MusicBotCommand {
   String getName();
 

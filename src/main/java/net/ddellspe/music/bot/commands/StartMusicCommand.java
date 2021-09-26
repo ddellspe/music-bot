@@ -10,6 +10,10 @@ import net.ddellspe.music.bot.audio.MusicAudioManager;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
+/**
+ * Starts the manager and puts the bot into the voice channel of the user who initiated the bot.
+ * There are a number of conditions to check for in that handling.
+ */
 @Component
 public class StartMusicCommand implements MessageResponseCommand {
   @Override

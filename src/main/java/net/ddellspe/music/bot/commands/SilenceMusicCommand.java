@@ -7,6 +7,7 @@ import net.ddellspe.music.bot.audio.MusicAudioManager;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
+/** Command which silences all actively playing music and clears the queue of further tracks. */
 @Component
 public class SilenceMusicCommand implements MessageResponseCommand {
   @Override

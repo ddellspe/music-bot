@@ -8,6 +8,10 @@ import net.ddellspe.music.bot.audio.MusicAudioManager;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
+/**
+ * Command that allows a user, when the manager is running, to play an audio track via path lookup.
+ * This path can be either a YouTube video url or local path.
+ */
 @Component
 public class PlayCommand implements PrefixMessageResponseCommand {
 

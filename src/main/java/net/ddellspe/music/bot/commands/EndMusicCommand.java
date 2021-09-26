@@ -7,6 +7,11 @@ import net.ddellspe.music.bot.audio.MusicAudioManager;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
+/**
+ * This is a command to end the manager and pull the bot from the voice channel. This command is not
+ * really needed unless someone wants to prevent the bot from making noise when people remain in the
+ * channel.
+ */
 @Component
 public class EndMusicCommand implements MessageResponseCommand {
   @Override

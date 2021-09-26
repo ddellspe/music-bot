@@ -8,6 +8,7 @@ import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.rest.util.Color;
 import net.ddellspe.music.bot.utils.MessageUtils;
 
+/** AudioLoadResultHandler for the Music Bot Classes. */
 public class MusicAudioLoadResultHandler implements AudioLoadResultHandler {
   private final MessageCreateEvent event;
   private final String query;

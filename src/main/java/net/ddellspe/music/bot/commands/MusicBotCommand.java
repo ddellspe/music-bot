@@ -7,6 +7,10 @@ import discord4j.core.object.VoiceState;
 import discord4j.voice.VoiceConnection;
 import org.springframework.lang.Nullable;
 
+/**
+ * Base bot command, which has standard way of obtaining a voice channel for different
+ * circumstances. This provides easier helper methods to use within listener filtering logic.
+ */
 public interface MusicBotCommand {
 
   @Nullable

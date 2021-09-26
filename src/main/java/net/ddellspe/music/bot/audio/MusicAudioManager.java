@@ -19,6 +19,10 @@ import net.ddellspe.music.bot.model.GuildConfiguration;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
+/**
+ * Audio Manager for Music Bot, this holds the references to the Audio Players as well as the
+ * overall configuration and state for each audio manager per guild.
+ */
 public class MusicAudioManager {
 
   public static AudioPlayerManager PLAYER_MANAGER;
@@ -38,16 +42,30 @@ public class MusicAudioManager {
 
   private static final Map<Snowflake, MusicAudioManager> MANAGERS = new ConcurrentHashMap<>();
 
+  /**
+   * Returns the existing audio manager or creates one for the provided guild.
+   *
+   * @param id the guild id to get the manager for
+   * @return the manager either if it exists or if there is configuration for it
+   */
   public static MusicAudioManager of(final Snowflake id) {
     return MANAGERS.computeIfAbsent(id, ignored -> new MusicAudioManager(id));
   }
 
+  /**
+   * This should only be used for testing to allow you to mock the Manager in tests.
+   *
+   * @param id the guild id for the manager
+   * @param manager the audio manager for the given guild
+   */
   public static void set(final Snowflake id, MusicAudioManager manager) {
     MANAGERS.put(id, manager);
   }
 
-  private final AudioPlayer player;
+  /** non-final for testing purposes, in practice this is final */
   private MusicAudioTrackScheduler scheduler;
+
+  private final AudioPlayer player;
   private final MusicAudioProvider provider;
   private final GuildConfiguration configuration;
   private final AtomicBoolean started;

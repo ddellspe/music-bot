@@ -10,6 +10,12 @@ public class MusicAudioProvider extends AudioProvider {
   private final AudioPlayer player;
   private final MutableAudioFrame frame;
 
+  /**
+   * This is just the provider for the player, if we want to add additional ways to provide audio
+   * based on lookups, this is where we would do it.
+   *
+   * @param player the AudioPlayer for playback
+   */
   public MusicAudioProvider(final AudioPlayer player) {
     super(ByteBuffer.allocate(StandardAudioDataFormats.DISCORD_OPUS.maximumChunkSize()));
 

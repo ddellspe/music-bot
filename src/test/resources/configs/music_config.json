@@ -3,5 +3,10 @@
     "guildId": 884566541402779718,
     "chatChannelId": 884566626165477437,
     "prefix": ">"
+  },
+  {
+    "guildId": 123456789,
+    "chatChannelId": null,
+    "prefix": "!"
   }
 ]
