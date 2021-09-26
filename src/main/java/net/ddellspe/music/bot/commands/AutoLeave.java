@@ -9,6 +9,11 @@ import net.ddellspe.music.bot.audio.MusicAudioManager;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
+/**
+ * While technically not a command, this is written similarly to support the behavior as a more of
+ * an event-driven command. This works off of voice state triggers, specifically for move and leave
+ * events to ensure that when there is no non-bot users in the channel, the bot leaves.
+ */
 @Component
 public class AutoLeave implements VoiceStateTrigger {
 

@@ -5,6 +5,11 @@ import discord4j.core.event.domain.VoiceStateUpdateEvent;
 import discord4j.voice.VoiceConnection;
 import reactor.core.publisher.Mono;
 
+/**
+ * A base command interface that supports handling based on a VoiceStateUpdateEvent. Much of this
+ * stems from the VoiceStateUpdateEvent being related to the same channel that the bot is currently
+ * in.
+ */
 public interface VoiceStateTrigger extends MusicBotCommand {
   boolean isCorrectEventType(VoiceStateUpdateEvent event);
 

@@ -22,10 +22,14 @@ public class GuildConfigurationTest {
             .getObjectMapper()
             .readValue(config.getInputStream(), new TypeReference<List<GuildConfiguration>>() {});
 
-    assertEquals(1, configs.size());
+    assertEquals(2, configs.size());
     GuildConfiguration guildConfig = configs.get(0);
     assertEquals(Snowflake.of("884566541402779718"), guildConfig.getGuildId());
     assertEquals(Snowflake.of("884566626165477437"), guildConfig.getChatChanelId());
     assertEquals(">", guildConfig.getCommandPrefix());
+    guildConfig = configs.get(1);
+    assertEquals(Snowflake.of("123456789"), guildConfig.getGuildId());
+    assertEquals(null, guildConfig.getChatChanelId());
+    assertEquals("!", guildConfig.getCommandPrefix());
   }
 }

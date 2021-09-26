@@ -7,6 +7,10 @@ import net.ddellspe.music.bot.audio.MusicAudioManager;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
+/**
+ * Attempts to (and actually does if it's able to) skip the current track in the queue and move to
+ * the next track in the queue.
+ */
 @Component
 public class SkipCommand implements MessageResponseCommand {
 

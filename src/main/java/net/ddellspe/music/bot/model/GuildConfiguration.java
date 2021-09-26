@@ -18,7 +18,7 @@ public class GuildConfiguration {
   }
 
   public Snowflake getChatChanelId() {
-    return Snowflake.of(chatChannelId);
+    return chatChannelId == null ? null : Snowflake.of(chatChannelId);
   }
 
   public String getCommandPrefix() {

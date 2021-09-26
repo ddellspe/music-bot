@@ -19,6 +19,17 @@ public class MusicAudioTrackScheduler extends AudioEventAdapter {
   private final MusicAudioManager manager;
   private GatewayDiscordClient client;
 
+  /**
+   * The scheduler for the music bot. This scheduler contains the queue of tracks as well as the
+   * player and manager, all of these combine to successively provide the points to make the
+   * required calls into the chat channel with the appropriate information about playback.
+   *
+   * <p>This constructor should ONLY be used for testing directly.
+   *
+   * @param player The Audio Player
+   * @param manager The Audio Manager
+   * @param queue The Queue of tracks
+   */
   public MusicAudioTrackScheduler(
       final AudioPlayer player, final MusicAudioManager manager, final List<AudioTrack> queue) {
     this.player = player;
@@ -26,6 +37,14 @@ public class MusicAudioTrackScheduler extends AudioEventAdapter {
     this.queue = queue;
   }
 
+  /**
+   * The scheduler for the music bot. This scheduler contains the queue of tracks as well as the
+   * player and manager, all of these combine to successively provide the points to make the
+   * required calls into the chat channel with the appropriate information about playback.
+   *
+   * @param player The Audio Player
+   * @param manager The Audio Manager
+   */
   public MusicAudioTrackScheduler(final AudioPlayer player, final MusicAudioManager manager) {
     this(player, manager, Collections.synchronizedList(new LinkedList<>()));
   }
