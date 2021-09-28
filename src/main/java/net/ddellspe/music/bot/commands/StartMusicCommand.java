@@ -4,6 +4,8 @@ import discord4j.common.util.Snowflake;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.VoiceState;
 import discord4j.core.object.entity.channel.VoiceChannel;
+import discord4j.core.spec.EmbedCreateSpec;
+import discord4j.core.spec.VoiceChannelJoinSpec;
 import discord4j.rest.util.Color;
 import discord4j.voice.VoiceConnection;
 import net.ddellspe.music.bot.audio.MusicAudioManager;
@@ -40,10 +42,11 @@ public class StartMusicCommand implements MessageResponseCommand {
           .getChannel()
           .flatMap(
               channel ->
-                  channel.createEmbed(
-                      spec ->
-                          spec.setColor(Color.RED)
-                              .setTitle("You must be in a voice channel to start the music bot.")))
+                  channel.createMessage(
+                      EmbedCreateSpec.builder()
+                          .color(Color.RED)
+                          .title("You must be in a voice channel to start the music bot.")
+                          .build()))
           .then();
     }
 
@@ -68,7 +71,11 @@ public class StartMusicCommand implements MessageResponseCommand {
         .filter(___ -> manager.isStarted())
         .flatMap(
             channel ->
-                channel.join(spec -> spec.setSelfDeaf(true).setProvider(manager.getProvider())))
+                channel.join(
+                    VoiceChannelJoinSpec.builder()
+                        .selfDeaf(true)
+                        .provider(manager.getProvider())
+                        .build()))
         .onErrorResume(
             e -> {
               manager.stop();
@@ -77,13 +84,14 @@ public class StartMusicCommand implements MessageResponseCommand {
                   .getChannel()
                   .flatMap(
                       channel ->
-                          channel.createEmbed(
-                              spec ->
-                                  spec.setColor(Color.RED)
-                                      .setTitle(
-                                          "Unable to start the manager, make sure I have "
-                                              + "permissions in the voice channel that you "
-                                              + "are in.")))
+                          channel.createMessage(
+                              EmbedCreateSpec.builder()
+                                  .color(Color.RED)
+                                  .title(
+                                      "Unable to start the manager, make sure I have "
+                                          + "permissions in the voice channel that you "
+                                          + "are in.")
+                                  .build()))
                   .subscribe();
               return event.getClient().getVoiceConnectionRegistry().getVoiceConnection(guildId);
             })
@@ -96,11 +104,12 @@ public class StartMusicCommand implements MessageResponseCommand {
             objects -> {
               return objects
                   .getT2()
-                  .createEmbed(
-                      spec ->
-                          spec.setColor(Color.MEDIUM_SEA_GREEN)
-                              .setTitle("Music Bot Started")
-                              .addField("Joined Channel", objects.getT1().getName(), true));
+                  .createMessage(
+                      EmbedCreateSpec.builder()
+                          .color(Color.MEDIUM_SEA_GREEN)
+                          .title("Music Bot Started")
+                          .addField("Joined Channel", objects.getT1().getName(), true)
+                          .build());
             })
         .then();
   }

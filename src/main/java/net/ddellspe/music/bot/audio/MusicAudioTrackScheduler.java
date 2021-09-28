@@ -7,6 +7,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
 import discord4j.common.util.Snowflake;
 import discord4j.core.GatewayDiscordClient;
 import discord4j.core.object.entity.channel.MessageChannel;
+import discord4j.core.spec.EmbedCreateSpec;
 import discord4j.rest.util.Color;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -88,16 +89,17 @@ public class MusicAudioTrackScheduler extends AudioEventAdapter {
             .cast(MessageChannel.class)
             .flatMap(
                 channel ->
-                    channel.createEmbed(
-                        spec ->
-                            spec.setColor(Color.MEDIUM_SEA_GREEN)
-                                .setTitle("Now Playing")
-                                .addField("Track Title", track.getInfo().title, false)
-                                .addField("Track Artist", track.getInfo().author, false)
-                                .addField(
-                                    "Duration",
-                                    MessageUtils.getDurationAsMinSecond(track.getInfo().length),
-                                    false)))
+                    channel.createMessage(
+                        EmbedCreateSpec.builder()
+                            .color(Color.MEDIUM_SEA_GREEN)
+                            .title("Now Playing")
+                            .addField("Track Title", track.getInfo().title, false)
+                            .addField("Track Artist", track.getInfo().author, false)
+                            .addField(
+                                "Duration",
+                                MessageUtils.getDurationAsMinSecond(track.getInfo().length),
+                                false)
+                            .build()))
             .subscribe();
       }
     }

@@ -3,6 +3,7 @@ package net.ddellspe.music.bot.commands;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -12,9 +13,10 @@ import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.Message;
 import discord4j.core.object.entity.channel.MessageChannel;
 import discord4j.core.spec.EmbedCreateSpec;
+import discord4j.core.spec.MessageCreateMono;
+import discord4j.core.spec.MessageCreateSpec;
 import discord4j.rest.util.Color;
 import java.util.Optional;
-import java.util.function.Consumer;
 import net.ddellspe.music.bot.audio.MusicAudioLoadResultHandler;
 import net.ddellspe.music.bot.audio.MusicAudioManager;
 import org.junit.jupiter.api.BeforeEach;
@@ -60,41 +62,38 @@ public class PlayCommandTest {
 
   @Test
   public void testInvalidQuerySendsMessageOfException() {
-    ArgumentCaptor<Consumer<EmbedCreateSpec>> consumerCaptor =
-        ArgumentCaptor.forClass(Consumer.class);
+    EmbedCreateSpec embedSpec =
+        EmbedCreateSpec.builder().color(Color.RED).title("Invalid command: '!play'").build();
 
     when(mockMessage.getContent()).thenReturn("!play");
-    when(mockChatChannel.createEmbed(any(Consumer.class))).thenReturn(Mono.empty());
+    when(mockChatChannel.createMessage(embedSpec))
+        .thenReturn(MessageCreateMono.of(mockChatChannel).withEmbeds(embedSpec));
+    // Necessary for embed create spec
+    when(mockChatChannel.createMessage(any(MessageCreateSpec.class))).thenReturn(Mono.empty());
 
     PlayCommand cmd = new PlayCommand();
     cmd.handle(mockEvent).block();
-    verify(mockChatChannel).createEmbed(consumerCaptor.capture());
-    Consumer<EmbedCreateSpec> messageSpecConsumer = consumerCaptor.getValue();
-    EmbedCreateSpec embedSpec = new EmbedCreateSpec();
-    messageSpecConsumer.accept(embedSpec);
-    assertEquals(Color.RED, Color.of(embedSpec.asRequest().color().get()));
-    assertEquals("Invalid command: '!play'", embedSpec.asRequest().title().get());
+    verify(mockChatChannel, times(1)).createMessage(embedSpec);
   }
 
   @Test
   public void testManagerNotStartedSendsMessageOfStatus() {
-    ArgumentCaptor<Consumer<EmbedCreateSpec>> consumerCaptor =
-        ArgumentCaptor.forClass(Consumer.class);
+    EmbedCreateSpec embedSpec =
+        EmbedCreateSpec.builder()
+            .color(Color.ORANGE)
+            .title("Bot not started, please use the command: '!start' to start the bot")
+            .build();
 
     when(mockMessage.getContent()).thenReturn("!play stuff");
     when(mockManager.isStarted()).thenReturn(false);
-    when(mockChatChannel.createEmbed(any(Consumer.class))).thenReturn(Mono.empty());
+    when(mockChatChannel.createMessage(embedSpec))
+        .thenReturn(MessageCreateMono.of(mockChatChannel).withEmbeds(embedSpec));
+    // Necessary for embed create spec
+    when(mockChatChannel.createMessage(any(MessageCreateSpec.class))).thenReturn(Mono.empty());
 
     PlayCommand cmd = new PlayCommand();
     cmd.handle(mockEvent).block();
-    verify(mockChatChannel).createEmbed(consumerCaptor.capture());
-    Consumer<EmbedCreateSpec> messageSpecConsumer = consumerCaptor.getValue();
-    EmbedCreateSpec embedSpec = new EmbedCreateSpec();
-    messageSpecConsumer.accept(embedSpec);
-    assertEquals(Color.ORANGE, Color.of(embedSpec.asRequest().color().get()));
-    assertEquals(
-        "Bot not started, please use the command: '!start' to start the bot",
-        embedSpec.asRequest().title().get());
+    verify(mockChatChannel, times(1)).createMessage(embedSpec);
   }
 
   @Test

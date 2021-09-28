@@ -17,14 +17,14 @@ import discord4j.common.util.Snowflake;
 import discord4j.core.GatewayDiscordClient;
 import discord4j.core.object.entity.channel.MessageChannel;
 import discord4j.core.spec.EmbedCreateSpec;
+import discord4j.core.spec.MessageCreateMono;
+import discord4j.core.spec.MessageCreateSpec;
 import discord4j.rest.util.Color;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.function.Consumer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import reactor.core.publisher.Mono;
 
@@ -108,34 +108,31 @@ public class MusicAudioTrackSchedulerTest {
     MessageChannel mockChannel = Mockito.mock(MessageChannel.class);
     AudioTrackInfo mockAudioTrackInfo =
         new AudioTrackInfo("Title", "Author", 30000L, "identifier", true, "test");
-    ArgumentCaptor<Consumer<EmbedCreateSpec>> consumerCaptor =
-        ArgumentCaptor.forClass(Consumer.class);
+    EmbedCreateSpec embedSpec =
+        EmbedCreateSpec.builder()
+            .color(Color.MEDIUM_SEA_GREEN)
+            .title("Now Playing")
+            .addField("Track Title", "Title", false)
+            .addField("Track Artist", "Author", false)
+            .addField("Duration", "30 sec.", false)
+            .build();
     GatewayDiscordClient mockClient = Mockito.mock(GatewayDiscordClient.class);
 
     when(mockPlayer.startTrack(mockTrack, true)).thenReturn(true);
     when(mockManager.getChatChannel()).thenReturn(chatChannel);
     when(mockClient.getChannelById(chatChannel)).thenReturn(Mono.just(mockChannel));
     when(mockTrack.getInfo()).thenReturn(mockAudioTrackInfo);
-    when(mockChannel.createEmbed(any(Consumer.class))).thenReturn(Mono.empty());
+    when(mockChannel.createMessage(embedSpec))
+        .thenReturn(MessageCreateMono.of(mockChannel).withEmbeds(embedSpec));
+    // Necessary for embed create spec
+    when(mockChannel.createMessage(any(MessageCreateSpec.class))).thenReturn(Mono.empty());
 
     scheduler.setClient(mockClient);
     assertTrue(scheduler.play(mockTrack));
 
     verify(mockPlayer, times(1)).startTrack(mockTrack, true);
     assertEquals(0, scheduler.getQueue().size());
-    verify(mockChannel).createEmbed(consumerCaptor.capture());
-    Consumer<EmbedCreateSpec> messageSpecConsumer = consumerCaptor.getValue();
-    EmbedCreateSpec embedSpec = new EmbedCreateSpec();
-    messageSpecConsumer.accept(embedSpec);
-    assertEquals(Color.MEDIUM_SEA_GREEN, Color.of(embedSpec.asRequest().color().get()));
-    assertEquals("Now Playing", embedSpec.asRequest().title().get());
-    assertEquals(3, embedSpec.asRequest().fields().get().size());
-    assertEquals("Track Title", embedSpec.asRequest().fields().get().get(0).name());
-    assertEquals("Title", embedSpec.asRequest().fields().get().get(0).value());
-    assertEquals("Track Artist", embedSpec.asRequest().fields().get().get(1).name());
-    assertEquals("Author", embedSpec.asRequest().fields().get().get(1).value());
-    assertEquals("Duration", embedSpec.asRequest().fields().get().get(2).name());
-    assertEquals("30 sec.", embedSpec.asRequest().fields().get().get(2).value());
+    verify(mockChannel, times(1)).createMessage(embedSpec);
   }
 
   @Test

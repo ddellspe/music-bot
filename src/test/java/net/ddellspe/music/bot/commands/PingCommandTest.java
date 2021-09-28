@@ -1,6 +1,7 @@
 package net.ddellspe.music.bot.commands;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -9,6 +10,8 @@ import discord4j.common.util.Snowflake;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.Message;
 import discord4j.core.object.entity.channel.MessageChannel;
+import discord4j.core.spec.MessageCreateMono;
+import discord4j.core.spec.MessageCreateSpec;
 import net.ddellspe.music.bot.audio.MusicAudioManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -50,7 +53,8 @@ public class PingCommandTest {
     when(mockEvent.getMessage()).thenReturn(mockMessage);
     when(mockMessage.getChannel()).thenReturn(channel);
     when(mockMessageChannel.createMessage("Pong"))
-        .thenReturn(Mono.just(Mockito.mock(Message.class)));
+        .thenReturn(MessageCreateMono.of(mockMessageChannel));
+    when(mockMessageChannel.createMessage(any(MessageCreateSpec.class))).thenReturn(Mono.empty());
 
     PingCommand cmd = new PingCommand();
     cmd.handle(mockEvent).block();
