@@ -5,6 +5,7 @@ import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import discord4j.core.event.domain.message.MessageCreateEvent;
+import discord4j.core.spec.EmbedCreateSpec;
 import discord4j.rest.util.Color;
 import net.ddellspe.music.bot.utils.MessageUtils;
 
@@ -35,16 +36,17 @@ public class MusicAudioLoadResultHandler implements AudioLoadResultHandler {
           .getChannel()
           .flatMap(
               channel ->
-                  channel.createEmbed(
-                      spec ->
-                          spec.setColor(Color.MEDIUM_SEA_GREEN)
-                              .setTitle("Added track to queue")
-                              .addField("Track Title", audioTrack.getInfo().title, false)
-                              .addField("Track Artist", audioTrack.getInfo().author, false)
-                              .addField(
-                                  "Duration",
-                                  MessageUtils.getDurationAsMinSecond(audioTrack.getInfo().length),
-                                  false)))
+                  channel.createMessage(
+                      EmbedCreateSpec.builder()
+                          .color(Color.MEDIUM_SEA_GREEN)
+                          .title("Added track to queue")
+                          .addField("Track Title", audioTrack.getInfo().title, false)
+                          .addField("Track Artist", audioTrack.getInfo().author, false)
+                          .addField(
+                              "Duration",
+                              MessageUtils.getDurationAsMinSecond(audioTrack.getInfo().length),
+                              false)
+                          .build()))
           .subscribe();
     }
   }
@@ -59,17 +61,17 @@ public class MusicAudioLoadResultHandler implements AudioLoadResultHandler {
             .getChannel()
             .flatMap(
                 channel ->
-                    channel.createEmbed(
-                        spec ->
-                            spec.setColor(Color.MEDIUM_SEA_GREEN)
-                                .setTitle("Added track to queue")
-                                .addField("Track Title", audioTrack.getInfo().title, false)
-                                .addField("Track Artist", audioTrack.getInfo().author, false)
-                                .addField(
-                                    "Duration",
-                                    MessageUtils.getDurationAsMinSecond(
-                                        audioTrack.getInfo().length),
-                                    false)))
+                    channel.createMessage(
+                        EmbedCreateSpec.builder()
+                            .color(Color.MEDIUM_SEA_GREEN)
+                            .title("Added track to queue")
+                            .addField("Track Title", audioTrack.getInfo().title, false)
+                            .addField("Track Artist", audioTrack.getInfo().author, false)
+                            .addField(
+                                "Duration",
+                                MessageUtils.getDurationAsMinSecond(audioTrack.getInfo().length),
+                                false)
+                            .build()))
             .subscribe();
       }
     }
@@ -82,16 +84,17 @@ public class MusicAudioLoadResultHandler implements AudioLoadResultHandler {
         .getChannel()
         .flatMap(
             channel ->
-                channel.createEmbed(
-                    spec ->
-                        spec.setColor(Color.RED)
-                            .setTitle("Could not find track")
-                            .addField("Query", query, false)
-                            .setFooter(
-                                "This bot does not support searching for a song on "
-                                    + "YouTube via keyword, you must provide a video id "
-                                    + "or video link.",
-                                null)))
+                channel.createMessage(
+                    EmbedCreateSpec.builder()
+                        .color(Color.RED)
+                        .title("Could not find track")
+                        .addField("Query", query, false)
+                        .footer(
+                            "This bot does not support searching for a song on "
+                                + "YouTube via keyword, you must provide a video id "
+                                + "or video link.",
+                            null)
+                        .build()))
         .subscribe();
   }
 
@@ -102,11 +105,12 @@ public class MusicAudioLoadResultHandler implements AudioLoadResultHandler {
         .getChannel()
         .flatMap(
             channel ->
-                channel.createEmbed(
-                    spec ->
-                        spec.setColor(Color.RED)
-                            .setTitle("Error loading the track")
-                            .addField("Error Message", e.getMessage(), false)))
+                channel.createMessage(
+                    EmbedCreateSpec.builder()
+                        .color(Color.RED)
+                        .title("Error loading the track")
+                        .addField("Error Message", e.getMessage(), false)
+                        .build()))
         .subscribe();
   }
 }

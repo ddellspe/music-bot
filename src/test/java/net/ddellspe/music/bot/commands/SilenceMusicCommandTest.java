@@ -12,14 +12,14 @@ import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.Message;
 import discord4j.core.object.entity.channel.MessageChannel;
 import discord4j.core.spec.EmbedCreateSpec;
+import discord4j.core.spec.MessageCreateMono;
+import discord4j.core.spec.MessageCreateSpec;
 import discord4j.rest.util.Color;
 import java.util.Optional;
-import java.util.function.Consumer;
 import net.ddellspe.music.bot.audio.MusicAudioManager;
 import net.ddellspe.music.bot.audio.MusicAudioTrackScheduler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -54,24 +54,23 @@ public class SilenceMusicCommandTest {
     Message mockMessage = Mockito.mock(Message.class);
     MessageChannel mockMessageChannel = Mockito.mock(MessageChannel.class);
     Mono<MessageChannel> channel = Mono.just(mockMessageChannel);
-    ArgumentCaptor<Consumer> consumerCaptor = ArgumentCaptor.forClass(Consumer.class);
+    EmbedCreateSpec embedSpec =
+        EmbedCreateSpec.builder().color(Color.RED).title("Music bot is not running").build();
 
     when(mockManager.isStarted()).thenReturn(false);
     when(mockEvent.getGuildId()).thenReturn(Optional.of(GUILD_ID));
     when(mockEvent.getMessage()).thenReturn(mockMessage);
     when(mockMessage.getChannel()).thenReturn(channel);
-    when(mockMessageChannel.createEmbed(any(Consumer.class))).thenReturn(Mono.just(mockMessage));
+    when(mockMessageChannel.createMessage(embedSpec))
+        .thenReturn(MessageCreateMono.of(mockMessageChannel).withEmbeds(embedSpec));
+    // Necessary for embed create spec
+    when(mockMessageChannel.createMessage(any(MessageCreateSpec.class))).thenReturn(Mono.empty());
 
     SilenceMusicCommand cmd = new SilenceMusicCommand();
     cmd.handle(mockEvent).block();
 
     StepVerifier.create(channel).expectNext(mockMessageChannel).verifyComplete();
-    verify(mockMessageChannel).createEmbed(consumerCaptor.capture());
-    Consumer<EmbedCreateSpec> messageSpecConsumer = consumerCaptor.getValue();
-    EmbedCreateSpec embedSpec = new EmbedCreateSpec();
-    messageSpecConsumer.accept(embedSpec);
-    assertEquals(Color.RED, Color.of(embedSpec.asRequest().color().get()));
-    assertEquals("Music bot is not running", embedSpec.asRequest().title().get());
+    verify(mockMessageChannel, times(1)).createMessage(embedSpec);
   }
 
   @Test
@@ -81,25 +80,27 @@ public class SilenceMusicCommandTest {
     MessageChannel mockMessageChannel = Mockito.mock(MessageChannel.class);
     MusicAudioTrackScheduler mockScheduler = Mockito.mock(MusicAudioTrackScheduler.class);
     Mono<MessageChannel> channel = Mono.just(mockMessageChannel);
-    ArgumentCaptor<Consumer> consumerCaptor = ArgumentCaptor.forClass(Consumer.class);
+    EmbedCreateSpec embedSpec =
+        EmbedCreateSpec.builder()
+            .color(Color.MEDIUM_SEA_GREEN)
+            .title("Music has been silenced")
+            .build();
 
     when(mockManager.isStarted()).thenReturn(true);
     when(mockManager.getScheduler()).thenReturn(mockScheduler);
     when(mockEvent.getGuildId()).thenReturn(Optional.of(GUILD_ID));
     when(mockEvent.getMessage()).thenReturn(mockMessage);
     when(mockMessage.getChannel()).thenReturn(channel);
-    when(mockMessageChannel.createEmbed(any(Consumer.class))).thenReturn(Mono.just(mockMessage));
+    when(mockMessageChannel.createMessage(embedSpec))
+        .thenReturn(MessageCreateMono.of(mockMessageChannel).withEmbeds(embedSpec));
+    // Necessary for embed create spec
+    when(mockMessageChannel.createMessage(any(MessageCreateSpec.class))).thenReturn(Mono.empty());
 
     SilenceMusicCommand cmd = new SilenceMusicCommand();
     cmd.handle(mockEvent).block();
 
     verify(mockScheduler, times(1)).stop();
     StepVerifier.create(channel).expectNext(mockMessageChannel).verifyComplete();
-    verify(mockMessageChannel).createEmbed(consumerCaptor.capture());
-    Consumer<EmbedCreateSpec> messageSpecConsumer = consumerCaptor.getValue();
-    EmbedCreateSpec embedSpec = new EmbedCreateSpec();
-    messageSpecConsumer.accept(embedSpec);
-    assertEquals(Color.MEDIUM_SEA_GREEN, Color.of(embedSpec.asRequest().color().get()));
-    assertEquals("Music has been silenced", embedSpec.asRequest().title().get());
+    verify(mockMessageChannel, times(1)).createMessage(embedSpec);
   }
 }

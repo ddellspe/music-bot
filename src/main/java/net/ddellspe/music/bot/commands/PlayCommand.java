@@ -2,6 +2,7 @@ package net.ddellspe.music.bot.commands;
 
 import discord4j.common.util.Snowflake;
 import discord4j.core.event.domain.message.MessageCreateEvent;
+import discord4j.core.spec.EmbedCreateSpec;
 import discord4j.rest.util.Color;
 import net.ddellspe.music.bot.audio.MusicAudioLoadResultHandler;
 import net.ddellspe.music.bot.audio.MusicAudioManager;
@@ -39,11 +40,11 @@ public class PlayCommand implements PrefixMessageResponseCommand {
           .getChannel()
           .flatMap(
               channel ->
-                  channel.createEmbed(
-                      spec ->
-                          spec.setColor(Color.RED)
-                              .setTitle(
-                                  "Invalid command: '" + event.getMessage().getContent() + "'")))
+                  channel.createMessage(
+                      EmbedCreateSpec.builder()
+                          .color(Color.RED)
+                          .title("Invalid command: '" + event.getMessage().getContent() + "'")
+                          .build()))
           .then();
     }
     if (manager.isStarted()) {
@@ -56,13 +57,14 @@ public class PlayCommand implements PrefixMessageResponseCommand {
           .getChannel()
           .flatMap(
               channel ->
-                  channel.createEmbed(
-                      spec ->
-                          spec.setColor(Color.ORANGE)
-                              .setTitle(
-                                  "Bot not started, please use the command: '"
-                                      + manager.getPrefix()
-                                      + "start' to start the bot")))
+                  channel.createMessage(
+                      EmbedCreateSpec.builder()
+                          .color(Color.ORANGE)
+                          .title(
+                              "Bot not started, please use the command: '"
+                                  + manager.getPrefix()
+                                  + "start' to start the bot")
+                          .build()))
           .then();
     }
   }

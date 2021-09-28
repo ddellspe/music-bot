@@ -16,6 +16,8 @@ import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.entity.Message;
 import discord4j.core.object.entity.channel.MessageChannel;
 import discord4j.core.spec.EmbedCreateSpec;
+import discord4j.core.spec.MessageCreateMono;
+import discord4j.core.spec.MessageCreateSpec;
 import discord4j.rest.util.Color;
 import java.util.List;
 import java.util.Optional;
@@ -70,32 +72,29 @@ public class MusicAudioLoadResultHandlerTest {
     AudioTrack mockAudioTrack = Mockito.mock(AudioTrack.class);
     AudioTrackInfo mockAudioTrackInfo =
         new AudioTrackInfo("Title", "Author", 30000L, "identifier", true, "test");
-    ArgumentCaptor<Consumer<EmbedCreateSpec>> consumerCaptor =
-        ArgumentCaptor.forClass(Consumer.class);
+    EmbedCreateSpec embedSpec =
+        EmbedCreateSpec.builder()
+            .color(Color.MEDIUM_SEA_GREEN)
+            .title("Added track to queue")
+            .addField("Track Title", "Title", false)
+            .addField("Track Artist", "Author", false)
+            .addField("Duration", "30 sec.", false)
+            .build();
 
     when(mockScheduler.play(mockAudioTrack)).thenReturn(false);
     when(mockEvent.getMessage()).thenReturn(mockMessage);
     when(mockMessage.getChannel()).thenReturn(Mono.just(mockChannel));
-    when(mockChannel.createEmbed(any(Consumer.class))).thenReturn(Mono.empty());
+    when(mockChannel.createMessage(embedSpec))
+        .thenReturn(MessageCreateMono.of(mockChannel).withEmbeds(embedSpec));
+    // Necessary for embed create spec
+    when(mockChannel.createMessage(any(MessageCreateSpec.class))).thenReturn(Mono.empty());
     when(mockAudioTrack.getInfo()).thenReturn(mockAudioTrackInfo);
 
     MusicAudioLoadResultHandler handler = new MusicAudioLoadResultHandler(mockEvent, query);
     handler.trackLoaded(mockAudioTrack);
 
     verify(mockScheduler, times(1)).play(mockAudioTrack);
-    verify(mockChannel).createEmbed(consumerCaptor.capture());
-    Consumer<EmbedCreateSpec> messageSpecConsumer = consumerCaptor.getValue();
-    EmbedCreateSpec embedSpec = new EmbedCreateSpec();
-    messageSpecConsumer.accept(embedSpec);
-    assertEquals(Color.MEDIUM_SEA_GREEN, Color.of(embedSpec.asRequest().color().get()));
-    assertEquals("Added track to queue", embedSpec.asRequest().title().get());
-    assertEquals(3, embedSpec.asRequest().fields().get().size());
-    assertEquals("Track Title", embedSpec.asRequest().fields().get().get(0).name());
-    assertEquals("Title", embedSpec.asRequest().fields().get().get(0).value());
-    assertEquals("Track Artist", embedSpec.asRequest().fields().get().get(1).name());
-    assertEquals("Author", embedSpec.asRequest().fields().get().get(1).value());
-    assertEquals("Duration", embedSpec.asRequest().fields().get().get(2).name());
-    assertEquals("30 sec.", embedSpec.asRequest().fields().get().get(2).value());
+    verify(mockChannel, times(1)).createMessage(embedSpec);
   }
 
   @Test
@@ -122,13 +121,22 @@ public class MusicAudioLoadResultHandlerTest {
     AudioTrackInfo mockAudioTrackInfo =
         new AudioTrackInfo("Title", "Author", 30000L, "identifier", true, "test");
     AudioPlaylist mockPlaylist = Mockito.mock(AudioPlaylist.class);
-    ArgumentCaptor<Consumer<EmbedCreateSpec>> consumerCaptor =
-        ArgumentCaptor.forClass(Consumer.class);
+    EmbedCreateSpec embedSpec =
+        EmbedCreateSpec.builder()
+            .color(Color.MEDIUM_SEA_GREEN)
+            .title("Added track to queue")
+            .addField("Track Title", "Title", false)
+            .addField("Track Artist", "Author", false)
+            .addField("Duration", "30 sec.", false)
+            .build();
 
     when(mockEvent.getMessage()).thenReturn(mockMessage);
     when(mockScheduler.play(mockAudioTrack)).thenReturn(false);
     when(mockMessage.getChannel()).thenReturn(Mono.just(mockChannel));
-    when(mockChannel.createEmbed(any(Consumer.class))).thenReturn(Mono.empty());
+    when(mockChannel.createMessage(embedSpec))
+        .thenReturn(MessageCreateMono.of(mockChannel).withEmbeds(embedSpec));
+    // Necessary for embed create spec
+    when(mockChannel.createMessage(any(MessageCreateSpec.class))).thenReturn(Mono.empty());
     when(mockAudioTrack.getInfo()).thenReturn(mockAudioTrackInfo);
     when(mockPlaylist.getTracks()).thenReturn(List.of(mockAudioTrack));
 
@@ -136,49 +144,35 @@ public class MusicAudioLoadResultHandlerTest {
     handler.playlistLoaded(mockPlaylist);
 
     verify(mockScheduler, times(1)).play(mockAudioTrack);
-    verify(mockChannel).createEmbed(consumerCaptor.capture());
-    Consumer<EmbedCreateSpec> messageSpecConsumer = consumerCaptor.getValue();
-    EmbedCreateSpec embedSpec = new EmbedCreateSpec();
-    messageSpecConsumer.accept(embedSpec);
-    assertEquals(Color.MEDIUM_SEA_GREEN, Color.of(embedSpec.asRequest().color().get()));
-    assertEquals("Added track to queue", embedSpec.asRequest().title().get());
-    assertEquals(3, embedSpec.asRequest().fields().get().size());
-    assertEquals("Track Title", embedSpec.asRequest().fields().get().get(0).name());
-    assertEquals("Title", embedSpec.asRequest().fields().get().get(0).value());
-    assertEquals("Track Artist", embedSpec.asRequest().fields().get().get(1).name());
-    assertEquals("Author", embedSpec.asRequest().fields().get().get(1).value());
-    assertEquals("Duration", embedSpec.asRequest().fields().get().get(2).name());
-    assertEquals("30 sec.", embedSpec.asRequest().fields().get().get(2).value());
   }
 
   @Test
   public void testNoMatches() {
     Message mockMessage = Mockito.mock(Message.class);
     MessageChannel mockChannel = Mockito.mock(MessageChannel.class);
-    ArgumentCaptor<Consumer<EmbedCreateSpec>> consumerCaptor =
-        ArgumentCaptor.forClass(Consumer.class);
+    query = "test query";
+    EmbedCreateSpec embedSpec =
+        EmbedCreateSpec.builder()
+            .color(Color.RED)
+            .title("Could not find track")
+            .addField("Query", query, false)
+            .footer(
+                "This bot does not support searching for a song on YouTube via keyword, "
+                    + "you must provide a video id or video link.",
+                null)
+            .build();
 
     when(mockEvent.getMessage()).thenReturn(mockMessage);
     when(mockMessage.getChannel()).thenReturn(Mono.just(mockChannel));
-    when(mockChannel.createEmbed(any(Consumer.class))).thenReturn(Mono.empty());
-    query = "test query";
+    when(mockChannel.createMessage(embedSpec))
+        .thenReturn(MessageCreateMono.of(mockChannel).withEmbeds(embedSpec));
+    // Necessary for embed create spec
+    when(mockChannel.createMessage(any(MessageCreateSpec.class))).thenReturn(Mono.empty());
 
     MusicAudioLoadResultHandler handler = new MusicAudioLoadResultHandler(mockEvent, query);
     handler.noMatches();
 
-    verify(mockChannel).createEmbed(consumerCaptor.capture());
-    Consumer<EmbedCreateSpec> messageSpecConsumer = consumerCaptor.getValue();
-    EmbedCreateSpec embedSpec = new EmbedCreateSpec();
-    messageSpecConsumer.accept(embedSpec);
-    assertEquals(Color.RED, Color.of(embedSpec.asRequest().color().get()));
-    assertEquals("Could not find track", embedSpec.asRequest().title().get());
-    assertEquals(1, embedSpec.asRequest().fields().get().size());
-    assertEquals("Query", embedSpec.asRequest().fields().get().get(0).name());
-    assertEquals(query, embedSpec.asRequest().fields().get().get(0).value());
-    assertEquals(
-        "This bot does not support searching for a song on YouTube via keyword, you must "
-            + "provide a video id or video link.",
-        embedSpec.asRequest().footer().get().text());
+    verify(mockChannel, times(1)).createMessage(embedSpec);
   }
 
   @Test
@@ -186,24 +180,23 @@ public class MusicAudioLoadResultHandlerTest {
     Message mockMessage = Mockito.mock(Message.class);
     MessageChannel mockChannel = Mockito.mock(MessageChannel.class);
     FriendlyException exception = new FriendlyException("message", Severity.COMMON, null);
-    ArgumentCaptor<Consumer<EmbedCreateSpec>> consumerCaptor =
-        ArgumentCaptor.forClass(Consumer.class);
+    EmbedCreateSpec embedSpec =
+        EmbedCreateSpec.builder()
+            .color(Color.RED)
+            .title("Error loading the track")
+            .addField("Error Message", "message", false)
+            .build();
 
     when(mockEvent.getMessage()).thenReturn(mockMessage);
     when(mockMessage.getChannel()).thenReturn(Mono.just(mockChannel));
-    when(mockChannel.createEmbed(any(Consumer.class))).thenReturn(Mono.empty());
+    when(mockChannel.createMessage(embedSpec))
+        .thenReturn(MessageCreateMono.of(mockChannel).withEmbeds(embedSpec));
+    // Necessary for embed create spec
+    when(mockChannel.createMessage(any(MessageCreateSpec.class))).thenReturn(Mono.empty());
 
     MusicAudioLoadResultHandler handler = new MusicAudioLoadResultHandler(mockEvent, query);
     handler.loadFailed(exception);
 
-    verify(mockChannel).createEmbed(consumerCaptor.capture());
-    Consumer<EmbedCreateSpec> messageSpecConsumer = consumerCaptor.getValue();
-    EmbedCreateSpec embedSpec = new EmbedCreateSpec();
-    messageSpecConsumer.accept(embedSpec);
-    assertEquals(Color.RED, Color.of(embedSpec.asRequest().color().get()));
-    assertEquals("Error loading the track", embedSpec.asRequest().title().get());
-    assertEquals(1, embedSpec.asRequest().fields().get().size());
-    assertEquals("Error Message", embedSpec.asRequest().fields().get().get(0).name());
-    assertEquals(exception.getMessage(), embedSpec.asRequest().fields().get().get(0).value());
+    verify(mockChannel, times(1)).createMessage(embedSpec);
   }
 }
