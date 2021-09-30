@@ -29,11 +29,12 @@ public class AutoLeaveTest {
   private VoiceConnectionRegistry mockRegistry;
   private MusicAudioManager mockManager;
   private VoiceChannel mockVoiceChannel;
+  private GatewayDiscordClient mockClient;
 
   @BeforeEach
   public void before() {
     mockEvent = Mockito.mock(VoiceStateUpdateEvent.class);
-    GatewayDiscordClient mockClient = Mockito.mock(GatewayDiscordClient.class);
+    mockClient = Mockito.mock(GatewayDiscordClient.class);
     mockRegistry = Mockito.mock(VoiceConnectionRegistry.class);
     VoiceState mockVoiceState = Mockito.mock(VoiceState.class);
     mockManager = Mockito.mock(MusicAudioManager.class);
@@ -103,7 +104,7 @@ public class AutoLeaveTest {
     AutoLeave tgr = new AutoLeave();
     tgr.handle(mockEvent).block();
 
-    verify(mockManager, times(1)).stop();
+    verify(mockManager, times(1)).stop(mockClient);
     verify(mockVoiceConnection, times(1)).disconnect();
   }
 
@@ -123,7 +124,7 @@ public class AutoLeaveTest {
     AutoLeave tgr = new AutoLeave();
     tgr.handle(mockEvent).block();
 
-    verify(mockManager, times(0)).stop();
+    verify(mockManager, times(0)).stop(mockClient);
     verify(mockVoiceConnection, times(0)).disconnect();
   }
 }

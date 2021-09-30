@@ -2,7 +2,6 @@ package net.ddellspe.music.bot.commands;
 
 import discord4j.common.util.Snowflake;
 import discord4j.core.event.domain.message.MessageCreateEvent;
-import discord4j.voice.VoiceConnection;
 import net.ddellspe.music.bot.audio.MusicAudioManager;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -36,8 +35,7 @@ public class EndMusicCommand implements MessageResponseCommand {
         .getVoiceConnectionRegistry()
         .getVoiceConnection(guildId)
         .filter(___ -> manager.isStarted())
-        .doOnNext(___ -> manager.stop())
-        .filter(___ -> !manager.isStarted())
-        .flatMap(VoiceConnection::disconnect);
+        .doOnNext(___ -> manager.stop(event.getClient()))
+        .then();
   }
 }

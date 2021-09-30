@@ -47,6 +47,27 @@ public class PlayCommand implements PrefixMessageResponseCommand {
                           .build()))
           .then();
     }
+
+    final Snowflake voiceChannelId = getCurrentVoiceChannel(event);
+    if (voiceChannelId == null) {
+      return event
+          .getMessage()
+          .getChannel()
+          .flatMap(
+              channel ->
+                  channel.createMessage(
+                      EmbedCreateSpec.builder()
+                          .color(Color.RED)
+                          .title("You must be in a voice channel to use the music bot.")
+                          .build()))
+          .then();
+    }
+
+    // If the manager hasn't yet been started, go ahead and start it
+    if (!manager.isStarted()) {
+      manager.start(event.getClient(), voiceChannelId, event.getMessage().getChannelId());
+    }
+
     if (manager.isStarted()) {
       MusicAudioManager.PLAYER_MANAGER.loadItemOrdered(
           manager, query, new MusicAudioLoadResultHandler(event, query));
@@ -61,9 +82,8 @@ public class PlayCommand implements PrefixMessageResponseCommand {
                       EmbedCreateSpec.builder()
                           .color(Color.ORANGE)
                           .title(
-                              "Bot not started, please use the command: '"
-                                  + manager.getPrefix()
-                                  + "start' to start the bot")
+                              "Bot could not be started, check "
+                                  + "permissions of bot and voice channels.")
                           .build()))
           .then();
     }
