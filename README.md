@@ -1,5 +1,10 @@
 # Music Bot
-[![build-test-and-deploy](https://github.com/ddellspe/music-bot/actions/workflows/build-and-test.yml/badge.svg?branch=main)](https://github.com/ddellspe/music-bot/actions/workflows/build-and-test.yml)
+[![Tests and Coverage](https://github.com/ddellspe/music-bot/actions/workflows/testing.yml/badge.svg)](https://github.com/ddellspe/music-bot/actions/workflows/testing.yml)
+[![Code Quality](https://github.com/ddellspe/music-bot/actions/workflows/code-quality.yml/badge.svg)](https://github.com/ddellspe/music-bot/actions/workflows/code-quality.yml)
+[![Build and Deploy](https://github.com/ddellspe/music-bot/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/ddellspe/music-bot/actions/workflows/build-and-test.yml)
+[![GitHub](https://img.shields.io/github/license/ddellspe/music-bot)](LICENSE)
+![GitHub top language](https://img.shields.io/github/languages/top/ddellspe/music-bot)
+[![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/ddellspe/music-bot?sort=semver)](https://github.com/ddellspe/music-bot/releases/latest)
 
 Music Bot is a site/discord bot set up to provide soundtrack-like support for discord servers.
 Information about the tools and even how to run your own bot can be found below.
