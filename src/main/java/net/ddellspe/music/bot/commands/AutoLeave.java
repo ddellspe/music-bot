@@ -2,10 +2,9 @@ package net.ddellspe.music.bot.commands;
 
 import discord4j.common.util.Snowflake;
 import discord4j.core.event.domain.VoiceStateUpdateEvent;
-import discord4j.core.object.VoiceState;
-import discord4j.core.object.entity.channel.VoiceChannel;
 import discord4j.voice.VoiceConnection;
 import net.ddellspe.music.bot.audio.MusicAudioManager;
+import net.ddellspe.music.bot.utils.VoiceUtils;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
@@ -33,22 +32,12 @@ public class AutoLeave implements VoiceStateTrigger {
     MusicAudioManager manager = MusicAudioManager.of(guildId);
     Snowflake voiceChannelId = getCurrentVoiceChannel(event);
 
-    final Mono<Boolean> nonBotChannelCountIsZero =
-        event
-            .getClient()
-            .getChannelById(voiceChannelId)
-            .cast(VoiceChannel.class)
-            .flatMapMany(VoiceChannel::getVoiceStates)
-            .flatMap(VoiceState::getMember)
-            .filter(member -> !member.isBot())
-            .count()
-            .map(count -> count == 0);
     return event
         .getClient()
         .getVoiceConnectionRegistry()
         .getVoiceConnection(guildId)
-        .filterWhen(___ -> nonBotChannelCountIsZero)
-        .doOnNext(___ -> manager.stop())
+        .filterWhen(___ -> VoiceUtils.botChannelHasNoPeople(event.getClient(), voiceChannelId))
+        .doOnNext(___ -> manager.stop(event.getClient()))
         .flatMap(VoiceConnection::disconnect);
   }
 }

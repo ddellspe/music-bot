@@ -55,19 +55,6 @@ If the message comes from any other message channel (chat channel) it will be ig
 This is a command to test that the bot is up or alive, and that it's present in your Discord server.
 When you request `!ping` the bot will respond in the channel with `Pong`.
 
-### Start
-| Command |
-| :-: |
-| `!start` |
-
-This command starts the audio portion of the bot. 
-To initiate the command, first join a voice channel, and then in the specified chat channel, send the message `!start`.
-If the bot is able to join the voice channel that you are in, it will join the channel and report back the channel that it is in.
-If the bot is unable to join the voice channel that you are in, it will wait roughly 10 seconds and report back that it was unable to join.
-The bot, when added to your server, may need to be tagged with special roles to join voice channels.
-Some private voice channels may be limited to a role scope, if so, you will need to add that role to the bot account.
-If you wish to restrict the bot from certain channels, you can do so by role assignment as well.
-
 ### End
 | Command |
 | :-: |
@@ -95,7 +82,7 @@ Any call to add new songs will immediately start their playing.
 | :-: |
 | `!play <audio url>` |
 
-This command adds a song (currently only one song) to the internal playlist and begins playback.
+This command adds a song or full playlist to the internal bot playlist and begins playback.
 If there is no audio currently playing, playback will begin as soon as song resolution takes place.
 In there is audio currently playing, the song will be added to the internal playlist.
 There is currently no support for generic searching via keyboard at this point, so you must provide a full url.

@@ -22,12 +22,13 @@ public class EndMusicCommandTest {
   private MusicAudioManager mockManager;
   private MessageCreateEvent mockEvent;
   private VoiceConnection mockVoiceConnection;
+  private GatewayDiscordClient mockClient;
 
   @BeforeEach
   public void before() {
     mockManager = Mockito.mock(MusicAudioManager.class);
     mockEvent = Mockito.mock(MessageCreateEvent.class);
-    GatewayDiscordClient mockClient = Mockito.mock(GatewayDiscordClient.class);
+    mockClient = Mockito.mock(GatewayDiscordClient.class);
     VoiceConnectionRegistry mockRegistry = Mockito.mock(VoiceConnectionRegistry.class);
     mockVoiceConnection = Mockito.mock(VoiceConnection.class);
     MusicAudioManager.set(GUILD_ID, mockManager);
@@ -53,27 +54,14 @@ public class EndMusicCommandTest {
 
   @Test
   public void testStoppingWhenManagerIsStarted() {
-    when(mockManager.isStarted()).thenReturn(true, false);
+    when(mockManager.isStarted()).thenReturn(true);
     when(mockVoiceConnection.disconnect()).thenReturn(Mono.empty());
 
     EndMusicCommand cmd = new EndMusicCommand();
     cmd.handle(mockEvent).block();
 
-    verify(mockManager, times(1)).stop();
-    verify(mockVoiceConnection, times(1)).disconnect();
-    verify(mockManager, times(2)).isStarted();
-  }
-
-  @Test
-  public void testStoppingWhenManagerIsStartedButFailsToStop() {
-    when(mockManager.isStarted()).thenReturn(true, true);
-
-    EndMusicCommand cmd = new EndMusicCommand();
-    cmd.handle(mockEvent).block();
-
-    verify(mockManager, times(1)).stop();
-    verify(mockVoiceConnection, times(0)).disconnect();
-    verify(mockManager, times(2)).isStarted();
+    verify(mockManager, times(1)).stop(mockClient);
+    verify(mockManager, times(1)).isStarted();
   }
 
   @Test
@@ -84,6 +72,6 @@ public class EndMusicCommandTest {
     cmd.handle(mockEvent).block();
 
     verify(mockManager, times(1)).isStarted();
-    verify(mockManager, times(0)).stop();
+    verify(mockManager, times(0)).stop(mockClient);
   }
 }
