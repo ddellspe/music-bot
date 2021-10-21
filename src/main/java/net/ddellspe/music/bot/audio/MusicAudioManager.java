@@ -215,7 +215,7 @@ public class MusicAudioManager {
                         VoiceChannelJoinSpec.builder()
                             .selfDeaf(true)
                             .provider(provider)
-                            .timeout(Duration.of(1, ChronoUnit.SECONDS))
+                            .timeout(Duration.of(2000, ChronoUnit.MILLIS))
                             .build())
                     .onErrorResume(e -> Mono.empty()));
   }

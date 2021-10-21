@@ -8,8 +8,6 @@ import net.ddellspe.music.bot.listeners.MessageResponseCommandListener;
 import net.ddellspe.music.bot.listeners.PrefixMessageResponseCommandListener;
 import net.ddellspe.music.bot.listeners.SuperUserMessageResponseCommandListener;
 import net.ddellspe.music.bot.listeners.VoiceStateTriggerListener;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ApplicationContext;
@@ -18,8 +16,6 @@ import reactor.core.publisher.Mono;
 
 @SpringBootApplication
 public class MusicBot {
-  private static final Logger LOGGER = LoggerFactory.getLogger(MusicBot.class);
-
   public static void main(String[] args) {
     ApplicationContext springContext =
         new SpringApplicationBuilder(MusicBot.class).build().run(args);
