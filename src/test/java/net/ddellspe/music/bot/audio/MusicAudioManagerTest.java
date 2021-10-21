@@ -160,7 +160,7 @@ public class MusicAudioManagerTest {
     VoiceChannelJoinSpec joinSpec = joinSpecCaptor.getValue();
     assertTrue(joinSpec.selfDeaf());
     assertEquals(mockProvider, joinSpec.provider());
-    assertEquals(Duration.of(1, ChronoUnit.SECONDS), joinSpec.timeout());
+    assertEquals(Duration.of(2000, ChronoUnit.MILLIS), joinSpec.timeout());
   }
 
   @Test
@@ -211,7 +211,7 @@ public class MusicAudioManagerTest {
     VoiceChannelJoinSpec joinSpec = joinSpecCaptor.getValue();
     assertTrue(joinSpec.selfDeaf());
     assertEquals(mockProvider, joinSpec.provider());
-    assertEquals(Duration.of(1, ChronoUnit.SECONDS), joinSpec.timeout());
+    assertEquals(Duration.of(2000, ChronoUnit.MILLIS), joinSpec.timeout());
   }
 
   @Test
