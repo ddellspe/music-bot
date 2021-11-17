@@ -81,10 +81,15 @@ public class SkipCommandTest {
     MusicAudioTrackScheduler mockScheduler = Mockito.mock(MusicAudioTrackScheduler.class);
     Mono<MessageChannel> channel = Mono.just(mockMessageChannel);
     EmbedCreateSpec embedSpec =
-        EmbedCreateSpec.builder().color(Color.DARK_GOLDENROD).title("No track to skip to").build();
+        EmbedCreateSpec.builder()
+            .color(Color.DARK_GOLDENROD)
+            .title("No track to skip to")
+            .description("If you would like to skip this track, use `!end`")
+            .build();
 
     when(mockManager.isStarted()).thenReturn(true);
     when(mockManager.getScheduler()).thenReturn(mockScheduler);
+    when(mockManager.getPrefix()).thenReturn("!");
     when(mockEvent.getGuildId()).thenReturn(Optional.of(GUILD_ID));
     when(mockEvent.getMessage()).thenReturn(mockMessage);
     when(mockMessage.getChannel()).thenReturn(channel);

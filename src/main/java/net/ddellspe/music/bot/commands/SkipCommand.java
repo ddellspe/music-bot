@@ -43,6 +43,10 @@ public class SkipCommand implements MessageResponseCommand {
                         EmbedCreateSpec.builder()
                             .color(Color.DARK_GOLDENROD)
                             .title("No track to skip to")
+                            .description(
+                                "If you would like to skip this track, use `"
+                                    + manager.getPrefix()
+                                    + "end`")
                             .build()))
             .then();
       }
