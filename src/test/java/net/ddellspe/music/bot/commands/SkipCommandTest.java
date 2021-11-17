@@ -84,7 +84,7 @@ public class SkipCommandTest {
         EmbedCreateSpec.builder()
             .color(Color.DARK_GOLDENROD)
             .title("No track to skip to")
-            .description("If you would like to skip this track, use `!end`")
+            .description("If you would like to skip this track, use `!silence`")
             .build();
 
     when(mockManager.isStarted()).thenReturn(true);

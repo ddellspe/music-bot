@@ -46,7 +46,7 @@ public class SkipCommand implements MessageResponseCommand {
                             .description(
                                 "If you would like to skip this track, use `"
                                     + manager.getPrefix()
-                                    + "end`")
+                                    + "silence`")
                             .build()))
             .then();
       }
