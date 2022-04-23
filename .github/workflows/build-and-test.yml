@@ -6,6 +6,8 @@ on:
     tags: [ 'v*.*.*' ]
   pull_request:
     branches: [ main ]
+  schedule:
+    - cron: '0 20 * * 5'
 
 jobs:
   build-and-deploy-docker-image:
