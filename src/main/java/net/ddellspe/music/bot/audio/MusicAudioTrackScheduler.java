@@ -119,6 +119,15 @@ public class MusicAudioTrackScheduler extends AudioEventAdapter {
     return playing;
   }
 
+  public boolean addToQueueAtPosition(final AudioTrack track, int position) {
+    if (queue.size() <= position) {
+      queue.add(track);
+    } else {
+      queue.add(position, track);
+    }
+    return false;
+  }
+
   public boolean skip() {
     return !queue.isEmpty() && play(queue.remove(0), true, false);
   }

@@ -90,6 +90,33 @@ When the bot finds the appropriate track to go along with the url, it will respo
 There will also be track information (Title, Artist, Duration) available in the response from the command.
 If the track isn't accessible or not found, the bot will provide an error response indicating such.
 
+### Force Play
+| Command |
+| :-: |
+| `!fplay <audio url>` |
+
+This command adds a song to be played immediately with the items in the playlist being queued immediately after.
+If there is no audio currently playing, playback will begin as soon as song resolution takes place.
+In there is audio currently playing, the song will begin as soon as song resolution takes place.
+There is currently no support for generic searching via keyboard at this point, so you must provide a full url.
+When the bot finds the appropriate track to go along with the url, it will respond that it's playing.
+There will also be track information (Title, Artist, Duration) available in the response from the command.
+If the track isn't accessible or not found, the bot will provide an error response indicating such.
+
+### Interrupt
+| Command |
+| :-: |
+| `!interrupt <audio url>` |
+
+This command adds a song to be played immediately with the items in the playlist being queued immediately after with the currently playing song being re-queued.
+If there is no audio currently playing, playback will begin as soon as song resolution takes place.
+In there is audio currently playing, the song will begin as soon as song resolution takes place.
+The currently playing song will be re-queued after the song/playlist at the existing position of the song at playback.
+There is currently no support for generic searching via keyboard at this point, so you must provide a full url.
+When the bot finds the appropriate track to go along with the url, it will respond that it's playing.
+There will also be track information (Title, Artist, Duration) available in the response from the command.
+If the track isn't accessible or not found, the bot will provide an error response indicating such.
+
 ### Skip
 | Command |
 | :-: |

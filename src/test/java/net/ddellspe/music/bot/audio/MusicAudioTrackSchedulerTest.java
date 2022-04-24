@@ -306,4 +306,69 @@ public class MusicAudioTrackSchedulerTest {
     assertTrue(scheduler.isCurrentlyPlaying());
     verify(mockChannel, times(1)).createMessage(embedSpec);
   }
+
+  @Test
+  public void testAddQueueAtPositionZeroNoQueue() {
+    AudioTrack mockTrack = Mockito.mock(AudioTrack.class);
+
+    scheduler.addToQueueAtPosition(mockTrack, 0);
+    assertEquals(1, scheduler.getQueue().size());
+    assertEquals(mockTrack, scheduler.getQueue().get(0));
+  }
+
+  @Test
+  public void testAddQueueAtPositionZeroExistingQueue() {
+    AudioTrack mockTrack = Mockito.mock(AudioTrack.class);
+    AudioTrack mockExistingTrack = Mockito.mock(AudioTrack.class);
+    queue.add(mockExistingTrack);
+
+    scheduler.addToQueueAtPosition(mockTrack, 0);
+    assertEquals(2, scheduler.getQueue().size());
+    assertEquals(mockTrack, scheduler.getQueue().get(0));
+    assertEquals(mockExistingTrack, scheduler.getQueue().get(1));
+  }
+
+  @Test
+  public void testAddQueueAtPositionOneExistingQueue() {
+    AudioTrack mockTrack = Mockito.mock(AudioTrack.class);
+    AudioTrack mockExistingTrack = Mockito.mock(AudioTrack.class);
+    queue.add(mockExistingTrack);
+
+    scheduler.addToQueueAtPosition(mockTrack, 1);
+    assertEquals(2, scheduler.getQueue().size());
+    assertEquals(mockExistingTrack, scheduler.getQueue().get(0));
+    assertEquals(mockTrack, scheduler.getQueue().get(1));
+  }
+
+  @Test
+  public void testAddQueueAtPositionTwoOfExistingQueue() {
+    AudioTrack mockTrack = Mockito.mock(AudioTrack.class);
+    AudioTrack mockExistingTrack = Mockito.mock(AudioTrack.class);
+    queue.add(mockExistingTrack);
+    queue.add(mockExistingTrack);
+    queue.add(mockExistingTrack);
+
+    scheduler.addToQueueAtPosition(mockTrack, 2);
+    assertEquals(4, scheduler.getQueue().size());
+    assertEquals(mockExistingTrack, scheduler.getQueue().get(0));
+    assertEquals(mockExistingTrack, scheduler.getQueue().get(1));
+    assertEquals(mockTrack, scheduler.getQueue().get(2));
+    assertEquals(mockExistingTrack, scheduler.getQueue().get(3));
+  }
+
+  @Test
+  public void testAddQueueAtPositionBeyondSizeOfExistingQueue() {
+    AudioTrack mockTrack = Mockito.mock(AudioTrack.class);
+    AudioTrack mockExistingTrack = Mockito.mock(AudioTrack.class);
+    queue.add(mockExistingTrack);
+    queue.add(mockExistingTrack);
+    queue.add(mockExistingTrack);
+
+    scheduler.addToQueueAtPosition(mockTrack, 62);
+    assertEquals(4, scheduler.getQueue().size());
+    assertEquals(mockExistingTrack, scheduler.getQueue().get(0));
+    assertEquals(mockExistingTrack, scheduler.getQueue().get(1));
+    assertEquals(mockExistingTrack, scheduler.getQueue().get(2));
+    assertEquals(mockTrack, scheduler.getQueue().get(3));
+  }
 }
