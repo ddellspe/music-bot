@@ -21,10 +21,8 @@ import discord4j.core.spec.MessageCreateSpec;
 import discord4j.rest.util.Color;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Consumer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import reactor.core.publisher.Mono;
 
@@ -100,16 +98,50 @@ public class MusicAudioLoadResultHandlerTest {
   public void testPlayListLoadedPlaying() {
     AudioTrack mockAudioTrack = Mockito.mock(AudioTrack.class);
     AudioPlaylist mockPlaylist = Mockito.mock(AudioPlaylist.class);
-    ArgumentCaptor<Consumer<EmbedCreateSpec>> consumerCaptor =
-        ArgumentCaptor.forClass(Consumer.class);
 
     when(mockPlaylist.getTracks()).thenReturn(List.of(mockAudioTrack));
-    when(mockScheduler.play(mockAudioTrack, false, false)).thenReturn(true);
+    when(mockScheduler.play(mockAudioTrack)).thenReturn(true);
 
     MusicAudioLoadResultHandler handler = new MusicAudioLoadResultHandler(mockEvent, query);
     handler.playlistLoaded(mockPlaylist);
 
-    verify(mockScheduler, times(1)).play(mockAudioTrack, false, false);
+    verify(mockScheduler, times(1)).play(mockAudioTrack);
+  }
+
+  @Test
+  public void testPlayListLoadedPlayingForcePlayNoRequeue() {
+    Message mockMessage = Mockito.mock(Message.class);
+    MessageChannel mockChannel = Mockito.mock(MessageChannel.class);
+    AudioTrack mockAudioTrack = Mockito.mock(AudioTrack.class);
+    AudioTrack mockAudioTrack2 = Mockito.mock(AudioTrack.class);
+    AudioTrackInfo mockAudioTrackInfo =
+        new AudioTrackInfo("Title", "Author", 30000L, "identifier", true, "test");
+    AudioPlaylist mockPlaylist = Mockito.mock(AudioPlaylist.class);
+    EmbedCreateSpec embedSpec =
+        EmbedCreateSpec.builder()
+            .color(Color.MEDIUM_SEA_GREEN)
+            .title("Added track to queue")
+            .addField("Track Title", "Title", false)
+            .addField("Track Artist", "Author", false)
+            .addField("Duration", "30 sec.", false)
+            .build();
+
+    when(mockScheduler.play(mockAudioTrack, true, false)).thenReturn(true);
+    when(mockEvent.getMessage()).thenReturn(mockMessage);
+    when(mockScheduler.addToQueueAtPosition(mockAudioTrack2, 0)).thenReturn(false);
+    when(mockMessage.getChannel()).thenReturn(Mono.just(mockChannel));
+    when(mockChannel.createMessage(embedSpec))
+        .thenReturn(MessageCreateMono.of(mockChannel).withEmbeds(embedSpec));
+    // Necessary for embed create spec
+    when(mockChannel.createMessage(any(MessageCreateSpec.class))).thenReturn(Mono.empty());
+    when(mockAudioTrack2.getInfo()).thenReturn(mockAudioTrackInfo);
+    when(mockPlaylist.getTracks()).thenReturn(List.of(mockAudioTrack, mockAudioTrack2));
+
+    MusicAudioLoadResultHandler handler = new MusicAudioLoadResultHandler(mockEvent, query, true);
+    handler.playlistLoaded(mockPlaylist);
+
+    verify(mockScheduler, times(1)).play(mockAudioTrack, true, false);
+    verify(mockScheduler, times(1)).addToQueueAtPosition(mockAudioTrack2, 0);
   }
 
   @Test
@@ -130,7 +162,7 @@ public class MusicAudioLoadResultHandlerTest {
             .build();
 
     when(mockEvent.getMessage()).thenReturn(mockMessage);
-    when(mockScheduler.play(mockAudioTrack, false, false)).thenReturn(false);
+    when(mockScheduler.play(mockAudioTrack)).thenReturn(false);
     when(mockMessage.getChannel()).thenReturn(Mono.just(mockChannel));
     when(mockChannel.createMessage(embedSpec))
         .thenReturn(MessageCreateMono.of(mockChannel).withEmbeds(embedSpec));
@@ -142,7 +174,7 @@ public class MusicAudioLoadResultHandlerTest {
     MusicAudioLoadResultHandler handler = new MusicAudioLoadResultHandler(mockEvent, query);
     handler.playlistLoaded(mockPlaylist);
 
-    verify(mockScheduler, times(1)).play(mockAudioTrack, false, false);
+    verify(mockScheduler, times(1)).play(mockAudioTrack);
   }
 
   @Test

@@ -74,9 +74,22 @@ public class MusicAudioLoadResultHandler implements AudioLoadResultHandler {
 
   @Override
   public void playlistLoaded(AudioPlaylist audioPlaylist) {
-    MusicAudioManager manager = MusicAudioManager.of(event.getGuildId().get());
+    MusicAudioTrackScheduler scheduler =
+        MusicAudioManager.of(event.getGuildId().get()).getScheduler();
+    int count = 0;
+
     for (AudioTrack audioTrack : audioPlaylist.getTracks()) {
-      if (!manager.getScheduler().play(audioTrack, forcePlay, requeueCurrent)) {
+      final boolean playing;
+      if (forcePlay) {
+        if (count == 0) {
+          playing = scheduler.play(audioTrack, true, requeueCurrent);
+        } else {
+          playing = scheduler.addToQueueAtPosition(audioTrack, count - 1);
+        }
+      } else {
+        playing = scheduler.play(audioTrack);
+      }
+      if (!playing) {
         event
             .getMessage()
             .getChannel()
@@ -95,6 +108,7 @@ public class MusicAudioLoadResultHandler implements AudioLoadResultHandler {
                             .build()))
             .subscribe();
       }
+      count++;
     }
   }
 
