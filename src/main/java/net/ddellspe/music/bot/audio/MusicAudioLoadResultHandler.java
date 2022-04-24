@@ -13,10 +13,23 @@ import net.ddellspe.music.bot.utils.MessageUtils;
 public class MusicAudioLoadResultHandler implements AudioLoadResultHandler {
   private final MessageCreateEvent event;
   private final String query;
+  private final boolean forcePlay;
+  private final boolean requeueCurrent;
 
   public MusicAudioLoadResultHandler(MessageCreateEvent event, String query) {
+    this(event, query, false, false);
+  }
+
+  public MusicAudioLoadResultHandler(MessageCreateEvent event, String query, boolean forcePlay) {
+    this(event, query, forcePlay, false);
+  }
+
+  public MusicAudioLoadResultHandler(
+      MessageCreateEvent event, String query, boolean forcePlay, boolean requeueCurrent) {
     this.event = event;
     this.query = query;
+    this.forcePlay = forcePlay;
+    this.requeueCurrent = requeueCurrent;
   }
 
   public MessageCreateEvent getEvent() {
@@ -27,10 +40,18 @@ public class MusicAudioLoadResultHandler implements AudioLoadResultHandler {
     return query;
   }
 
+  public boolean isForcePlay() {
+    return forcePlay;
+  }
+
+  public boolean shouldRequeueCurrent() {
+    return requeueCurrent;
+  }
+
   @Override
   public void trackLoaded(AudioTrack audioTrack) {
     MusicAudioManager manager = MusicAudioManager.of(event.getGuildId().get());
-    if (!manager.getScheduler().play(audioTrack)) {
+    if (!manager.getScheduler().play(audioTrack, forcePlay, requeueCurrent)) {
       event
           .getMessage()
           .getChannel()
@@ -55,7 +76,7 @@ public class MusicAudioLoadResultHandler implements AudioLoadResultHandler {
   public void playlistLoaded(AudioPlaylist audioPlaylist) {
     MusicAudioManager manager = MusicAudioManager.of(event.getGuildId().get());
     for (AudioTrack audioTrack : audioPlaylist.getTracks()) {
-      if (!manager.getScheduler().play(audioTrack)) {
+      if (!manager.getScheduler().play(audioTrack, forcePlay, requeueCurrent)) {
         event
             .getMessage()
             .getChannel()

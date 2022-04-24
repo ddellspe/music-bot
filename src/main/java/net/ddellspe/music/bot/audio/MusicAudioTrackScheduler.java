@@ -106,7 +106,11 @@ public class MusicAudioTrackScheduler extends AudioEventAdapter {
    */
   public boolean play(final AudioTrack track, final boolean force, final boolean requeueCurrent) {
     if (currentlyPlaying && force && requeueCurrent) {
-      queue.add(0, currentTrack);
+      AudioTrack updatedTrack = currentTrack.makeClone();
+      if (updatedTrack.isSeekable()) {
+        updatedTrack.setPosition(currentTrack.getPosition());
+      }
+      queue.add(0, updatedTrack);
     }
     final boolean playing = player.startTrack(track, !force);
     if (!playing) {

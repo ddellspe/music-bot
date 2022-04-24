@@ -168,16 +168,39 @@ public class MusicAudioTrackSchedulerTest {
   @Test
   public void testPlayWithNoExistingQueueButCurrentTrackForcePlayRequeue() {
     AudioTrack mockCurrentTrack = Mockito.mock(AudioTrack.class);
+    AudioTrack mockCurrentTrackClone = Mockito.mock(AudioTrack.class);
     AudioTrack mockNewTrack = Mockito.mock(AudioTrack.class);
     // setting currentTrack and currentPlaying = true
     scheduler.onTrackStart(mockPlayer, mockCurrentTrack);
     // immediately play the song
     when(mockPlayer.startTrack(mockNewTrack, false)).thenReturn(true);
+    when(mockCurrentTrack.makeClone()).thenReturn(mockCurrentTrackClone);
+    when(mockCurrentTrackClone.isSeekable()).thenReturn(true);
+    when(mockCurrentTrack.getPosition()).thenReturn(1000L);
+
+    assertTrue(scheduler.play(mockNewTrack, true, true));
+    verify(mockPlayer, times(1)).startTrack(mockNewTrack, false);
+    verify(mockCurrentTrackClone).setPosition(1000L);
+    assertEquals(1, scheduler.getQueue().size());
+    assertEquals(mockCurrentTrackClone, scheduler.getQueue().get(0));
+  }
+
+  @Test
+  public void testPlayWithNoExistingQueueButCurrentTrackForcePlayRequeueTrackNotSeekable() {
+    AudioTrack mockCurrentTrack = Mockito.mock(AudioTrack.class);
+    AudioTrack mockCurrentTrackClone = Mockito.mock(AudioTrack.class);
+    AudioTrack mockNewTrack = Mockito.mock(AudioTrack.class);
+    // setting currentTrack and currentPlaying = true
+    scheduler.onTrackStart(mockPlayer, mockCurrentTrack);
+    // immediately play the song
+    when(mockPlayer.startTrack(mockNewTrack, false)).thenReturn(true);
+    when(mockCurrentTrack.makeClone()).thenReturn(mockCurrentTrackClone);
+    when(mockCurrentTrackClone.isSeekable()).thenReturn(false);
 
     assertTrue(scheduler.play(mockNewTrack, true, true));
     verify(mockPlayer, times(1)).startTrack(mockNewTrack, false);
     assertEquals(1, scheduler.getQueue().size());
-    assertEquals(mockCurrentTrack, scheduler.getQueue().get(0));
+    assertEquals(mockCurrentTrackClone, scheduler.getQueue().get(0));
   }
 
   @Test
