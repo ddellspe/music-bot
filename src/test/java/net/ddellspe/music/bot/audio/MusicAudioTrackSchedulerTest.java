@@ -61,6 +61,7 @@ public class MusicAudioTrackSchedulerTest {
   public void testWhenQueueHasTrackReturnsTrue() {
     AudioTrack mockTrack = Mockito.mock(AudioTrack.class);
     queue.add(mockTrack);
+    // immediately play the song
     when(mockPlayer.startTrack(mockTrack, false)).thenReturn(true);
 
     assertTrue(scheduler.skip());
@@ -72,6 +73,7 @@ public class MusicAudioTrackSchedulerTest {
   public void testWhenQueueHasTrackReturnsTrueStartTrackFails() {
     AudioTrack mockTrack = Mockito.mock(AudioTrack.class);
     queue.add(mockTrack);
+    // doesn't immediately play the song
     when(mockPlayer.startTrack(mockTrack, false)).thenReturn(false);
 
     assertFalse(scheduler.skip());
@@ -84,16 +86,20 @@ public class MusicAudioTrackSchedulerTest {
     AudioTrack mockTrack = Mockito.mock(AudioTrack.class);
     AudioTrack mockTrack2 = Mockito.mock(AudioTrack.class);
     queue.add(mockTrack);
+    // doesn't immediately play the song
     when(mockPlayer.startTrack(mockTrack2, true)).thenReturn(false);
 
     assertFalse(scheduler.play(mockTrack2));
     verify(mockPlayer, times(1)).startTrack(mockTrack2, true);
     assertEquals(2, scheduler.getQueue().size());
+    assertEquals(mockTrack, scheduler.getQueue().get(0));
+    assertEquals(mockTrack2, scheduler.getQueue().get(1));
   }
 
   @Test
-  public void testPlayWithNoExistingQueueAndNoClient() {
+  public void testPlayWithNoExistingQueueOrCurrentPlaying() {
     AudioTrack mockTrack = Mockito.mock(AudioTrack.class);
+    // immediately play the song
     when(mockPlayer.startTrack(mockTrack, true)).thenReturn(true);
 
     assertTrue(scheduler.play(mockTrack));
@@ -102,37 +108,87 @@ public class MusicAudioTrackSchedulerTest {
   }
 
   @Test
-  public void testPlayWithNoExistingQueueAndClientPresent() {
-    Snowflake chatChannel = Snowflake.of("111111");
-    AudioTrack mockTrack = Mockito.mock(AudioTrack.class);
-    MessageChannel mockChannel = Mockito.mock(MessageChannel.class);
-    AudioTrackInfo mockAudioTrackInfo =
-        new AudioTrackInfo("Title", "Author", 30000L, "identifier", true, "test");
-    EmbedCreateSpec embedSpec =
-        EmbedCreateSpec.builder()
-            .color(Color.MEDIUM_SEA_GREEN)
-            .title("Now Playing")
-            .addField("Track Title", "Title", false)
-            .addField("Track Artist", "Author", false)
-            .addField("Duration", "30 sec.", false)
-            .build();
-    GatewayDiscordClient mockClient = Mockito.mock(GatewayDiscordClient.class);
+  public void testPlayWithNoExistingQueueButCurrentTrackNoForce() {
+    AudioTrack mockCurrentTrack = Mockito.mock(AudioTrack.class);
+    AudioTrack mockNewTrack = Mockito.mock(AudioTrack.class);
+    // setting currentTrack and currentPlaying = true
+    scheduler.onTrackStart(mockPlayer, mockCurrentTrack);
+    // doesn't immediately play the song
+    when(mockPlayer.startTrack(mockNewTrack, true)).thenReturn(false);
 
-    when(mockPlayer.startTrack(mockTrack, true)).thenReturn(true);
-    when(mockManager.getChatChannel()).thenReturn(chatChannel);
-    when(mockClient.getChannelById(chatChannel)).thenReturn(Mono.just(mockChannel));
-    when(mockTrack.getInfo()).thenReturn(mockAudioTrackInfo);
-    when(mockChannel.createMessage(embedSpec))
-        .thenReturn(MessageCreateMono.of(mockChannel).withEmbeds(embedSpec));
-    // Necessary for embed create spec
-    when(mockChannel.createMessage(any(MessageCreateSpec.class))).thenReturn(Mono.empty());
+    assertFalse(scheduler.play(mockNewTrack, false));
+    verify(mockPlayer, times(1)).startTrack(mockNewTrack, true);
+    assertEquals(1, scheduler.getQueue().size());
+    assertEquals(mockNewTrack, scheduler.getQueue().get(0));
+  }
 
-    scheduler.setClient(mockClient);
-    assertTrue(scheduler.play(mockTrack));
+  @Test
+  public void testPlayWithNoExistingQueueButCurrentTrackNoForceViaStandardPlay() {
+    AudioTrack mockCurrentTrack = Mockito.mock(AudioTrack.class);
+    AudioTrack mockNewTrack = Mockito.mock(AudioTrack.class);
+    // setting currentTrack and currentPlaying = true
+    scheduler.onTrackStart(mockPlayer, mockCurrentTrack);
+    // doesn't immediately play the song
+    when(mockPlayer.startTrack(mockNewTrack, true)).thenReturn(false);
 
-    verify(mockPlayer, times(1)).startTrack(mockTrack, true);
+    assertFalse(scheduler.play(mockNewTrack));
+    verify(mockPlayer, times(1)).startTrack(mockNewTrack, true);
+    assertEquals(1, scheduler.getQueue().size());
+    assertEquals(mockNewTrack, scheduler.getQueue().get(0));
+  }
+
+  @Test
+  public void testPlayWithNoExistingQueueButCurrentTrackForcePlay() {
+    AudioTrack mockCurrentTrack = Mockito.mock(AudioTrack.class);
+    AudioTrack mockNewTrack = Mockito.mock(AudioTrack.class);
+    // setting currentTrack and currentPlaying = true
+    scheduler.onTrackStart(mockPlayer, mockCurrentTrack);
+    // immediately play the song
+    when(mockPlayer.startTrack(mockNewTrack, false)).thenReturn(true);
+
+    assertTrue(scheduler.play(mockNewTrack, true));
+    verify(mockPlayer, times(1)).startTrack(mockNewTrack, false);
     assertEquals(0, scheduler.getQueue().size());
-    verify(mockChannel, times(1)).createMessage(embedSpec);
+  }
+
+  @Test
+  public void testPlayWithNoExistingQueueButCurrentTrackForcePlayNoRequeue() {
+    AudioTrack mockCurrentTrack = Mockito.mock(AudioTrack.class);
+    AudioTrack mockNewTrack = Mockito.mock(AudioTrack.class);
+    // setting currentTrack and currentPlaying = true
+    scheduler.onTrackStart(mockPlayer, mockCurrentTrack);
+    // immediately play the song
+    when(mockPlayer.startTrack(mockNewTrack, false)).thenReturn(true);
+
+    assertTrue(scheduler.play(mockNewTrack, true, false));
+    verify(mockPlayer, times(1)).startTrack(mockNewTrack, false);
+    assertEquals(0, scheduler.getQueue().size());
+  }
+
+  @Test
+  public void testPlayWithNoExistingQueueButCurrentTrackForcePlayRequeue() {
+    AudioTrack mockCurrentTrack = Mockito.mock(AudioTrack.class);
+    AudioTrack mockNewTrack = Mockito.mock(AudioTrack.class);
+    // setting currentTrack and currentPlaying = true
+    scheduler.onTrackStart(mockPlayer, mockCurrentTrack);
+    // immediately play the song
+    when(mockPlayer.startTrack(mockNewTrack, false)).thenReturn(true);
+
+    assertTrue(scheduler.play(mockNewTrack, true, true));
+    verify(mockPlayer, times(1)).startTrack(mockNewTrack, false);
+    assertEquals(1, scheduler.getQueue().size());
+    assertEquals(mockCurrentTrack, scheduler.getQueue().get(0));
+  }
+
+  @Test
+  public void testPlayWithNoCurrentTrackForcePlayRequeue() {
+    AudioTrack mockNewTrack = Mockito.mock(AudioTrack.class);
+    // immediately play the song
+    when(mockPlayer.startTrack(mockNewTrack, false)).thenReturn(true);
+
+    assertTrue(scheduler.play(mockNewTrack, true, true));
+    verify(mockPlayer, times(1)).startTrack(mockNewTrack, false);
+    assertEquals(0, scheduler.getQueue().size());
   }
 
   @Test
@@ -175,5 +231,56 @@ public class MusicAudioTrackSchedulerTest {
 
     verify(mockPlayer, times(0)).startTrack(mockTrack, false);
     assertEquals(1, scheduler.getQueue().size());
+  }
+
+  @Test
+  public void testCurrentlyPlayingStateWithPauseResumeWithNoTrack() {
+    assertFalse(scheduler.isCurrentlyPlaying());
+    scheduler.onPlayerResume(mockPlayer);
+    assertFalse(scheduler.isCurrentlyPlaying());
+    scheduler.onPlayerPause(mockPlayer);
+    assertFalse(scheduler.isCurrentlyPlaying());
+  }
+
+  @Test
+  public void testCurrentlyPlayingStateWithPauseResumeWithTrack() {
+    AudioTrack mockTrack = Mockito.mock(AudioTrack.class);
+    scheduler.onTrackStart(mockPlayer, mockTrack);
+    assertTrue(scheduler.isCurrentlyPlaying());
+    scheduler.onPlayerPause(mockPlayer);
+    assertFalse(scheduler.isCurrentlyPlaying());
+    scheduler.onPlayerResume(mockPlayer);
+    assertTrue(scheduler.isCurrentlyPlaying());
+  }
+
+  @Test
+  public void testOnTrackStartWithTrack() {
+    Snowflake chatChannel = Snowflake.of("111111");
+    AudioTrack mockTrack = Mockito.mock(AudioTrack.class);
+    MessageChannel mockChannel = Mockito.mock(MessageChannel.class);
+    AudioTrackInfo mockAudioTrackInfo =
+        new AudioTrackInfo("Title", "Author", 30000L, "identifier", true, "test");
+    EmbedCreateSpec embedSpec =
+        EmbedCreateSpec.builder()
+            .color(Color.MEDIUM_SEA_GREEN)
+            .title("Now Playing")
+            .addField("Track Title", "Title", false)
+            .addField("Track Artist", "Author", false)
+            .addField("Duration", "30 sec.", false)
+            .build();
+    GatewayDiscordClient mockClient = Mockito.mock(GatewayDiscordClient.class);
+
+    when(mockManager.getChatChannel()).thenReturn(chatChannel);
+    when(mockClient.getChannelById(chatChannel)).thenReturn(Mono.just(mockChannel));
+    when(mockTrack.getInfo()).thenReturn(mockAudioTrackInfo);
+    when(mockChannel.createMessage(embedSpec))
+        .thenReturn(MessageCreateMono.of(mockChannel).withEmbeds(embedSpec));
+    // Necessary for embed create spec
+    when(mockChannel.createMessage(any(MessageCreateSpec.class))).thenReturn(Mono.empty());
+
+    scheduler.setClient(mockClient);
+    scheduler.onTrackStart(mockPlayer, mockTrack);
+    assertTrue(scheduler.isCurrentlyPlaying());
+    verify(mockChannel, times(1)).createMessage(embedSpec);
   }
 }

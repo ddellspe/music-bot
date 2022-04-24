@@ -19,6 +19,8 @@ public class MusicAudioTrackScheduler extends AudioEventAdapter {
   private final AudioPlayer player;
   private final MusicAudioManager manager;
   private GatewayDiscordClient client;
+  private boolean currentlyPlaying;
+  private AudioTrack currentTrack;
 
   /**
    * The scheduler for the music bot. This scheduler contains the queue of tracks as well as the
@@ -70,45 +72,51 @@ public class MusicAudioTrackScheduler extends AudioEventAdapter {
     return manager;
   }
 
+  /**
+   * Play the specified audio track, if something is already playing, the track is added to the
+   * queue for later playing when the current track stops or is completed.
+   *
+   * @param track The AudioTrack to play
+   * @return true if the track requested has been set to play
+   */
   public boolean play(final AudioTrack track) {
-    return play(track, false);
+    return play(track, false, false);
   }
 
+  /**
+   * Play the specified audio track, boolean options to decide to force the playing of this track.
+   *
+   * @param track The AudioTrack to play
+   * @param force whether to force the playing of the track or not
+   * @return true if the track requested has been set to play
+   */
   public boolean play(final AudioTrack track, final boolean force) {
-    final boolean playing = player.startTrack(track, !force);
+    return play(track, force, false);
+  }
 
+  /**
+   * Play the specified audio track, boolean options to decide to force the playing and if the
+   * current playing track should be re-added to the queue.
+   *
+   * @param track The AudioTrack to play
+   * @param force whether to force the playing of the track or not
+   * @param requeueCurrent if there's a currently playing track, whether to re-queue it (at the
+   *     start of the queue) or to simply skip it
+   * @return true if the track requested has been set to play
+   */
+  public boolean play(final AudioTrack track, final boolean force, final boolean requeueCurrent) {
+    if (currentlyPlaying && force && requeueCurrent) {
+      queue.add(0, currentTrack);
+    }
+    final boolean playing = player.startTrack(track, !force);
     if (!playing) {
       queue.add(track);
-    } else {
-      // client should never be null in these cases, since the manager has to be started to play a
-      // track
-      if (client != null) {
-        Snowflake chatChannel = manager.getChatChannel();
-        client
-            .getChannelById(chatChannel)
-            .cast(MessageChannel.class)
-            .flatMap(
-                channel ->
-                    channel.createMessage(
-                        EmbedCreateSpec.builder()
-                            .color(Color.MEDIUM_SEA_GREEN)
-                            .title("Now Playing")
-                            .addField("Track Title", track.getInfo().title, false)
-                            .addField("Track Artist", track.getInfo().author, false)
-                            .addField(
-                                "Duration",
-                                MessageUtils.getDurationAsMinSecond(track.getInfo().length),
-                                false)
-                            .build()))
-            .subscribe();
-      }
     }
-
     return playing;
   }
 
   public boolean skip() {
-    return !queue.isEmpty() && play(queue.remove(0), true);
+    return !queue.isEmpty() && play(queue.remove(0), true, false);
   }
 
   public void stop() {
@@ -118,11 +126,57 @@ public class MusicAudioTrackScheduler extends AudioEventAdapter {
     player.stopTrack();
   }
 
+  public boolean isCurrentlyPlaying() {
+    return currentlyPlaying && currentTrack != null;
+  }
+
+  @Override
+  public void onPlayerPause(AudioPlayer player) {
+    currentlyPlaying = false;
+  }
+
+  @Override
+  public void onPlayerResume(AudioPlayer player) {
+    currentlyPlaying = true;
+  }
+
+  @Override
+  public void onTrackStart(AudioPlayer player, AudioTrack track) {
+    currentlyPlaying = true;
+    currentTrack = track;
+    // client should never be null, it's set when the manager that owns the scheduler starts
+    if (client != null) {
+      Snowflake chatChannel = manager.getChatChannel();
+      client
+          .getChannelById(chatChannel)
+          .cast(MessageChannel.class)
+          .flatMap(
+              channel ->
+                  channel.createMessage(
+                      EmbedCreateSpec.builder()
+                          .color(Color.MEDIUM_SEA_GREEN)
+                          .title("Now Playing")
+                          .addField("Track Title", track.getInfo().title, false)
+                          .addField("Track Artist", track.getInfo().author, false)
+                          .addField(
+                              "Duration",
+                              MessageUtils.getDurationAsMinSecond(track.getInfo().length),
+                              false)
+                          .build()))
+          .subscribe();
+    }
+  }
+
   @Override
   public void onTrackEnd(
       final AudioPlayer player, final AudioTrack track, final AudioTrackEndReason endReason) {
-    if (endReason.mayStartNext) {
-      skip();
+    currentlyPlaying = false;
+    currentTrack = null;
+    switch (endReason) {
+      case FINISHED:
+      case LOAD_FAILED:
+        skip();
+        break;
     }
   }
 }
