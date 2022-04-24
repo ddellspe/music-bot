@@ -1,9 +1,12 @@
 package net.ddellspe.music.bot.listeners;
 
 import discord4j.core.event.domain.message.MessageCreateEvent;
+import discord4j.core.object.entity.Role;
 import java.util.Collection;
+import java.util.List;
 import net.ddellspe.music.bot.audio.MusicAudioManager;
 import net.ddellspe.music.bot.commands.MessageResponseCommand;
+import net.ddellspe.music.bot.commands.SuperUserMessageResponseCommand;
 import org.springframework.context.ApplicationContext;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -18,6 +21,7 @@ public class MessageResponseCommandListener {
 
   public Mono<Void> handle(MessageCreateEvent event) {
     MusicAudioManager manager = MusicAudioManager.of(event.getGuildId().get());
+    final List<Role> roles = event.getMember().get().getRoles().collectList().block();
     return Flux.fromIterable(commands)
         .filter(
             command ->
@@ -27,6 +31,10 @@ public class MessageResponseCommandListener {
                             .getChannelId()
                             .equals(command.getFilterChannel(event.getGuildId().get())))
                     || command.getFilterChannel(event.getGuildId().get()) == null))
+        .filter(
+            command ->
+                !(command instanceof SuperUserMessageResponseCommand)
+                    || (roles.stream().anyMatch(role -> "DJ".equals(role.getName()))))
         .filter(
             command ->
                 (manager.getPrefix() + command.getName())

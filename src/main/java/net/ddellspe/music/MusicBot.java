@@ -6,7 +6,6 @@ import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.rest.RestClient;
 import net.ddellspe.music.bot.listeners.MessageResponseCommandListener;
 import net.ddellspe.music.bot.listeners.PrefixMessageResponseCommandListener;
-import net.ddellspe.music.bot.listeners.SuperUserMessageResponseCommandListener;
 import net.ddellspe.music.bot.listeners.VoiceStateTriggerListener;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
@@ -24,14 +23,6 @@ public class MusicBot {
         .build()
         .withGateway(
             gatewayClient -> {
-              SuperUserMessageResponseCommandListener superUsermessageResponseCommandListener =
-                  new SuperUserMessageResponseCommandListener(springContext);
-
-              Mono<Void> onSuperUserMessageResponseCommand =
-                  gatewayClient
-                      .on(MessageCreateEvent.class, superUsermessageResponseCommandListener::handle)
-                      .then();
-
               MessageResponseCommandListener messageResponseCommandListener =
                   new MessageResponseCommandListener(springContext);
 
@@ -57,10 +48,7 @@ public class MusicBot {
                       .then();
 
               return Mono.when(
-                  onSuperUserMessageResponseCommand,
-                  onMessageResponseCommand,
-                  onPrefixMessageResponseCommand,
-                  onVoiceStateChanged);
+                  onMessageResponseCommand, onPrefixMessageResponseCommand, onVoiceStateChanged);
             })
         .block();
   }
