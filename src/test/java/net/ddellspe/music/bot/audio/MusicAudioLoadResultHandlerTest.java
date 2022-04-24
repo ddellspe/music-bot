@@ -32,14 +32,13 @@ public class MusicAudioLoadResultHandlerTest {
   private final Snowflake GUILD_ID = Snowflake.of("123456");
   private String query;
   private MessageCreateEvent mockEvent;
-  private MusicAudioManager mockManager;
   private MusicAudioTrackScheduler mockScheduler;
 
   @BeforeEach
   public void before() {
     mockEvent = Mockito.mock(MessageCreateEvent.class);
     query = "";
-    mockManager = Mockito.mock(MusicAudioManager.class);
+    MusicAudioManager mockManager = Mockito.mock(MusicAudioManager.class);
     mockScheduler = Mockito.mock(MusicAudioTrackScheduler.class);
     when(mockEvent.getGuildId()).thenReturn(Optional.of(GUILD_ID));
     when(mockManager.getScheduler()).thenReturn(mockScheduler);
@@ -57,12 +56,12 @@ public class MusicAudioLoadResultHandlerTest {
   @Test
   public void testTrackLoadedPlaying() {
     AudioTrack mockAudioTrack = Mockito.mock(AudioTrack.class);
-    when(mockScheduler.play(mockAudioTrack)).thenReturn(true);
+    when(mockScheduler.play(mockAudioTrack, false, false)).thenReturn(true);
 
     MusicAudioLoadResultHandler handler = new MusicAudioLoadResultHandler(mockEvent, query);
     handler.trackLoaded(mockAudioTrack);
 
-    verify(mockScheduler, times(1)).play(mockAudioTrack);
+    verify(mockScheduler, times(1)).play(mockAudioTrack, false, false);
   }
 
   @Test
@@ -81,7 +80,7 @@ public class MusicAudioLoadResultHandlerTest {
             .addField("Duration", "30 sec.", false)
             .build();
 
-    when(mockScheduler.play(mockAudioTrack)).thenReturn(false);
+    when(mockScheduler.play(mockAudioTrack, false, false)).thenReturn(false);
     when(mockEvent.getMessage()).thenReturn(mockMessage);
     when(mockMessage.getChannel()).thenReturn(Mono.just(mockChannel));
     when(mockChannel.createMessage(embedSpec))
@@ -93,7 +92,7 @@ public class MusicAudioLoadResultHandlerTest {
     MusicAudioLoadResultHandler handler = new MusicAudioLoadResultHandler(mockEvent, query);
     handler.trackLoaded(mockAudioTrack);
 
-    verify(mockScheduler, times(1)).play(mockAudioTrack);
+    verify(mockScheduler, times(1)).play(mockAudioTrack, false, false);
     verify(mockChannel, times(1)).createMessage(embedSpec);
   }
 
@@ -105,12 +104,12 @@ public class MusicAudioLoadResultHandlerTest {
         ArgumentCaptor.forClass(Consumer.class);
 
     when(mockPlaylist.getTracks()).thenReturn(List.of(mockAudioTrack));
-    when(mockScheduler.play(mockAudioTrack)).thenReturn(true);
+    when(mockScheduler.play(mockAudioTrack, false, false)).thenReturn(true);
 
     MusicAudioLoadResultHandler handler = new MusicAudioLoadResultHandler(mockEvent, query);
     handler.playlistLoaded(mockPlaylist);
 
-    verify(mockScheduler, times(1)).play(mockAudioTrack);
+    verify(mockScheduler, times(1)).play(mockAudioTrack, false, false);
   }
 
   @Test
@@ -131,7 +130,7 @@ public class MusicAudioLoadResultHandlerTest {
             .build();
 
     when(mockEvent.getMessage()).thenReturn(mockMessage);
-    when(mockScheduler.play(mockAudioTrack)).thenReturn(false);
+    when(mockScheduler.play(mockAudioTrack, false, false)).thenReturn(false);
     when(mockMessage.getChannel()).thenReturn(Mono.just(mockChannel));
     when(mockChannel.createMessage(embedSpec))
         .thenReturn(MessageCreateMono.of(mockChannel).withEmbeds(embedSpec));
@@ -143,7 +142,7 @@ public class MusicAudioLoadResultHandlerTest {
     MusicAudioLoadResultHandler handler = new MusicAudioLoadResultHandler(mockEvent, query);
     handler.playlistLoaded(mockPlaylist);
 
-    verify(mockScheduler, times(1)).play(mockAudioTrack);
+    verify(mockScheduler, times(1)).play(mockAudioTrack, false, false);
   }
 
   @Test

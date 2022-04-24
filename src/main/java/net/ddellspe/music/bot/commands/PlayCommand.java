@@ -69,8 +69,7 @@ public class PlayCommand implements PrefixMessageResponseCommand {
     }
 
     if (manager.isStarted()) {
-      MusicAudioManager.PLAYER_MANAGER.loadItemOrdered(
-          manager, query, new MusicAudioLoadResultHandler(event, query));
+      playTrack(manager, query, event);
       return Mono.empty().then();
     } else {
       return event
@@ -87,5 +86,10 @@ public class PlayCommand implements PrefixMessageResponseCommand {
                           .build()))
           .then();
     }
+  }
+
+  void playTrack(MusicAudioManager manager, String query, MessageCreateEvent event) {
+    MusicAudioManager.PLAYER_MANAGER.loadItemOrdered(
+        manager, query, new MusicAudioLoadResultHandler(event, query));
   }
 }
