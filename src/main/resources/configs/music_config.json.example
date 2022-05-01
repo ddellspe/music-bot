@@ -1,0 +1,7 @@
+[
+  {
+    "guildId": 123456789,
+    "chatChannelId": 234567891,
+    "prefix": "!"
+  }
+]
