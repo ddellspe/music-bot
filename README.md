@@ -25,7 +25,10 @@ docker run -d \
 
 ### Configuration
 
-Without the configs folder mapped, the bot will only work in a test server personal to @ddellspe.
+Without the configs folder mapped, the bot will not start up, you must take the 
+[music_config.json.example](src/main/resources/configs/music_config.json.example), move it to `music_config.json` in 
+the same folder and update the `guildId`, `chatChannelId` and `prefix` as necessary.
+If you plan to host multiple discords in a single file, the config supports an array of configuration objects.
 The current configuration of the config file is:
 ```json
 [

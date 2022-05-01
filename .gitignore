@@ -1,3 +1,6 @@
+# Project Sensitive Files
+music_config.json
+
 # Eclipse
 .classpath
 .project
