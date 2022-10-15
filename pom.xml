@@ -12,7 +12,7 @@
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
-        <mockito.version>4.6.1</mockito.version>
+        <mockito.version>4.8.0</mockito.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
     <dependencyManagement>
@@ -20,28 +20,28 @@
             <dependency>
                 <groupId>com.fasterxml.jackson</groupId>
                 <artifactId>jackson-bom</artifactId>
-                <version>2.13.3</version>
+                <version>2.13.4.20221013</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
             <dependency>
                 <groupId>org.apache.logging.log4j</groupId>
                 <artifactId>log4j-bom</artifactId>
-                <version>2.18.0</version>
+                <version>2.19.0</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
             <dependency>
                 <groupId>org.junit</groupId>
                 <artifactId>junit-bom</artifactId>
-                <version>5.8.2</version>
+                <version>5.9.1</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
             <dependency>
                 <groupId>com.discord4j</groupId>
                 <artifactId>discord4j-core</artifactId>
-                <version>3.2.2</version>
+                <version>3.2.3</version>
             </dependency>
             <dependency>
                 <groupId>com.sedmelluq</groupId>
@@ -51,7 +51,7 @@
             <dependency>
                 <groupId>io.projectreactor</groupId>
                 <artifactId>reactor-test</artifactId>
-                <version>3.4.19</version>
+                <version>3.4.24</version>
             </dependency>
             <dependency>
                 <groupId>org.mockito</groupId>
@@ -66,7 +66,7 @@
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-starter-web</artifactId>
-                <version>2.7.1</version>
+                <version>2.7.4</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -141,21 +141,21 @@
                 <plugin>
                     <groupId>com.github.ekryd.sortpom</groupId>
                     <artifactId>sortpom-maven-plugin</artifactId>
-                    <version>3.0.0</version>
+                    <version>3.2.0</version>
                 </plugin>
                 <plugin>
                     <groupId>com.google.cloud.tools</groupId>
                     <artifactId>jib-maven-plugin</artifactId>
-                    <version>3.2.1</version>
+                    <version>3.3.0</version>
                 </plugin>
                 <plugin>
                     <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.8.1</version>
+                    <version>3.10.1</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-enforcer-plugin</artifactId>
-                    <version>3.0.0</version>
+                    <version>3.1.0</version>
                     <inherited>true</inherited>
                     <executions>
                         <execution>
@@ -166,7 +166,7 @@
                             <configuration>
                                 <rules>
                                     <requireMavenVersion>
-                                        <version>3.1.1</version>
+                                        <version>3.2.5</version>
                                     </requireMavenVersion>
                                 </rules>
                                 <fail>true</fail>
@@ -187,7 +187,7 @@
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>versions-maven-plugin</artifactId>
-                    <version>2.10.0</version>
+                    <version>2.12.0</version>
                     <configuration>
                         <rulesUri>file:///${project.basedir}/src/etc/versions-rules.xml</rulesUri>
                     </configuration>
@@ -246,7 +246,7 @@
                 <plugin>
                     <groupId>org.springframework.boot</groupId>
                     <artifactId>spring-boot-maven-plugin</artifactId>
-                    <version>2.6.7</version>
+                    <version>2.7.0</version>
                 </plugin>
             </plugins>
         </pluginManagement>
