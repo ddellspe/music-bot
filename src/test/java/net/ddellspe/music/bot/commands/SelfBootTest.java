@@ -3,6 +3,7 @@ package net.ddellspe.music.bot.commands;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -11,22 +12,28 @@ import discord4j.common.util.Snowflake;
 import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.domain.VoiceStateUpdateEvent;
 import discord4j.core.object.VoiceState;
-import discord4j.core.object.entity.Member;
+import discord4j.core.object.entity.channel.MessageChannel;
 import discord4j.core.object.entity.channel.VoiceChannel;
+import discord4j.core.spec.EmbedCreateSpec;
+import discord4j.core.spec.MessageCreateMono;
+import discord4j.core.spec.MessageCreateSpec;
+import discord4j.rest.util.Color;
 import discord4j.voice.VoiceConnection;
 import discord4j.voice.VoiceConnectionRegistry;
+import java.util.Optional;
 import net.ddellspe.music.bot.audio.MusicAudioManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-public class AutoLeaveTest {
+public class SelfBootTest {
+
   private final Snowflake SELF_ID = Snowflake.of("222222");
   private final Snowflake EVENT_ID = Snowflake.of("333333");
   private static final Snowflake GUILD_ID = Snowflake.of("123456");
   private static final Snowflake VOICE_CHANNEL_ID = Snowflake.of("111111");
+  private static final Snowflake CHAT_CHANNEL_ID = Snowflake.of("111112");
   private VoiceStateUpdateEvent mockEvent;
   private VoiceConnectionRegistry mockRegistry;
   private MusicAudioManager mockManager;
@@ -56,63 +63,82 @@ public class AutoLeaveTest {
     GatewayDiscordClient mockClient = Mockito.mock(GatewayDiscordClient.class);
 
     when(mockEvent.getCurrent()).thenReturn(mockState);
+    when(mockState.getUserId()).thenReturn(EVENT_ID);
+    when(mockEvent.getClient()).thenReturn(mockClient);
+    when(mockClient.getSelfId()).thenReturn(SELF_ID);
+
+    SelfBoot tgr = new SelfBoot();
+    assertFalse(tgr.isCorrectEventType(mockEvent));
+  }
+
+  @Test
+  public void testIsCorrectEventTypeSelfNotLeaveEvent() {
+    VoiceState mockState = Mockito.mock(VoiceState.class);
+    GatewayDiscordClient mockClient = Mockito.mock(GatewayDiscordClient.class);
+
+    when(mockEvent.getCurrent()).thenReturn(mockState);
     when(mockState.getUserId()).thenReturn(SELF_ID);
     when(mockEvent.getClient()).thenReturn(mockClient);
     when(mockClient.getSelfId()).thenReturn(SELF_ID);
+    when(mockEvent.isLeaveEvent()).thenReturn(false);
 
-    AutoLeave tgr = new AutoLeave();
+    SelfBoot tgr = new SelfBoot();
     assertFalse(tgr.isCorrectEventType(mockEvent));
   }
 
   @Test
-  public void testIsCorrectEventTypeOnJoinEvent() {
+  public void testIsCorrectEventTypeSelfLeaveEvent() {
     VoiceState mockState = Mockito.mock(VoiceState.class);
     GatewayDiscordClient mockClient = Mockito.mock(GatewayDiscordClient.class);
 
     when(mockEvent.getCurrent()).thenReturn(mockState);
-    when(mockState.getUserId()).thenReturn(EVENT_ID);
+    when(mockState.getUserId()).thenReturn(SELF_ID);
     when(mockEvent.getClient()).thenReturn(mockClient);
     when(mockClient.getSelfId()).thenReturn(SELF_ID);
-    when(mockEvent.isMoveEvent()).thenReturn(false);
-    when(mockEvent.isLeaveEvent()).thenReturn(false);
-    when(mockEvent.isJoinEvent()).thenReturn(true);
-
-    AutoLeave tgr = new AutoLeave();
-    assertFalse(tgr.isCorrectEventType(mockEvent));
-  }
-
-  @Test
-  public void testIsCorrectEventTypeOnMoveEvent() {
-    VoiceState mockState = Mockito.mock(VoiceState.class);
-    GatewayDiscordClient mockClient = Mockito.mock(GatewayDiscordClient.class);
-
-    when(mockEvent.getCurrent()).thenReturn(mockState);
-    when(mockState.getUserId()).thenReturn(EVENT_ID);
-    when(mockEvent.getClient()).thenReturn(mockClient);
-    when(mockClient.getSelfId()).thenReturn(SELF_ID);
-    when(mockEvent.isMoveEvent()).thenReturn(true);
-    when(mockEvent.isLeaveEvent()).thenReturn(false);
-    when(mockEvent.isJoinEvent()).thenReturn(false);
-
-    AutoLeave tgr = new AutoLeave();
-    assertTrue(tgr.isCorrectEventType(mockEvent));
-  }
-
-  @Test
-  public void testIsCorrectEventTypeOnLeaveEvent() {
-    VoiceState mockState = Mockito.mock(VoiceState.class);
-    GatewayDiscordClient mockClient = Mockito.mock(GatewayDiscordClient.class);
-
-    when(mockEvent.getCurrent()).thenReturn(mockState);
-    when(mockState.getUserId()).thenReturn(EVENT_ID);
-    when(mockEvent.getClient()).thenReturn(mockClient);
-    when(mockClient.getSelfId()).thenReturn(SELF_ID);
-    when(mockEvent.isMoveEvent()).thenReturn(false);
     when(mockEvent.isLeaveEvent()).thenReturn(true);
-    when(mockEvent.isJoinEvent()).thenReturn(false);
 
-    AutoLeave tgr = new AutoLeave();
+    SelfBoot tgr = new SelfBoot();
     assertTrue(tgr.isCorrectEventType(mockEvent));
+  }
+
+  @Test
+  public void testIsCorrectChannelVoiceConnectionIsNull() {
+    when(mockRegistry.getVoiceConnection(GUILD_ID)).thenReturn(Mono.empty());
+
+    SelfBoot tgr = new SelfBoot();
+    assertFalse(tgr.isCorrectChannel(mockEvent));
+  }
+
+  @Test
+  public void testIsCorrectChannelVoiceConnectionNotNullChannelIdNotNullIsNotCurrentChannel() {
+    VoiceConnection mockVoiceConnection = Mockito.mock(VoiceConnection.class);
+    when(mockRegistry.getVoiceConnection(GUILD_ID)).thenReturn(Mono.just(mockVoiceConnection));
+    when(mockVoiceConnection.getChannelId()).thenReturn(Mono.just(VOICE_CHANNEL_ID));
+    when(mockEvent.getCurrent().getChannelId()).thenReturn(Optional.of(CHAT_CHANNEL_ID));
+
+    SelfBoot tgr = new SelfBoot();
+    assertFalse(tgr.isCorrectChannel(mockEvent));
+  }
+
+  @Test
+  public void testIsCorrectChannelVoiceConnectionNotNullChannelIdNotNullIsCurrentChannel() {
+    VoiceConnection mockVoiceConnection = Mockito.mock(VoiceConnection.class);
+    when(mockRegistry.getVoiceConnection(GUILD_ID)).thenReturn(Mono.just(mockVoiceConnection));
+    when(mockVoiceConnection.getChannelId()).thenReturn(Mono.just(VOICE_CHANNEL_ID));
+    when(mockEvent.getCurrent().getChannelId()).thenReturn(Optional.of(VOICE_CHANNEL_ID));
+
+    SelfBoot tgr = new SelfBoot();
+    assertTrue(tgr.isCorrectChannel(mockEvent));
+  }
+
+  @Test
+  public void testIsCorrectChannelVoiceConnectionNotNullChannelIdNull() {
+    VoiceConnection mockVoiceConnection = Mockito.mock(VoiceConnection.class);
+    when(mockRegistry.getVoiceConnection(GUILD_ID)).thenReturn(Mono.just(mockVoiceConnection));
+    when(mockVoiceConnection.getChannelId()).thenReturn(Mono.empty());
+
+    SelfBoot tgr = new SelfBoot();
+    assertTrue(tgr.isCorrectChannel(mockEvent));
   }
 
   @Test
@@ -121,47 +147,38 @@ public class AutoLeaveTest {
     when(mockRegistry.getVoiceConnection(GUILD_ID)).thenReturn(Mono.just(mockVoiceConnection));
     when(mockVoiceConnection.getChannelId()).thenReturn(Mono.just(VOICE_CHANNEL_ID));
 
-    AutoLeave tgr = new AutoLeave();
+    SelfBoot tgr = new SelfBoot();
     assertEquals(VOICE_CHANNEL_ID, tgr.getFilterChannel(mockEvent));
   }
 
   @Test
-  public void testWhenChannelHasNoNonBotUsersManagerIsStopped() {
-    VoiceConnection mockVoiceConnection = Mockito.mock(VoiceConnection.class);
-    VoiceState mockVoiceState = Mockito.mock(VoiceState.class);
-    Member mockMember = Mockito.mock(Member.class);
+  public void testHandleManagerNotStarted() {
+    when(mockManager.isStarted()).thenReturn(false);
 
-    when(mockVoiceChannel.getVoiceStates()).thenReturn(Flux.just(mockVoiceState));
-    when(mockVoiceState.getMember()).thenReturn(Mono.just(mockMember));
-    when(mockMember.isBot()).thenReturn(true);
-    when(mockRegistry.getVoiceConnection(GUILD_ID)).thenReturn(Mono.just(mockVoiceConnection));
-    when(mockVoiceConnection.getChannelId()).thenReturn(Mono.just(VOICE_CHANNEL_ID));
-    when(mockVoiceConnection.disconnect()).thenReturn(Mono.empty());
-
-    AutoLeave tgr = new AutoLeave();
+    SelfBoot tgr = new SelfBoot();
     tgr.handle(mockEvent).block();
-
-    verify(mockManager, times(1)).stop(mockClient);
-    verify(mockVoiceConnection, times(1)).disconnect();
+    verify(mockEvent, times(0)).getClient();
   }
 
   @Test
-  public void testWhenChannelHasANonBotUsersManagerIsStopped() {
-    VoiceConnection mockVoiceConnection = Mockito.mock(VoiceConnection.class);
-    VoiceState mockVoiceState = Mockito.mock(VoiceState.class);
-    Member mockMember = Mockito.mock(Member.class);
+  public void testHandleManagerStarted() {
+    EmbedCreateSpec expectedSpec =
+        EmbedCreateSpec.builder()
+            .color(Color.RED)
+            .title("Bot has been disconnected from the voice channel.")
+            .build();
 
-    when(mockVoiceChannel.getVoiceStates()).thenReturn(Flux.just(mockVoiceState));
-    when(mockVoiceState.getMember()).thenReturn(Mono.just(mockMember));
-    when(mockMember.isBot()).thenReturn(false);
-    when(mockRegistry.getVoiceConnection(GUILD_ID)).thenReturn(Mono.just(mockVoiceConnection));
-    when(mockVoiceConnection.getChannelId()).thenReturn(Mono.just(VOICE_CHANNEL_ID));
-    when(mockVoiceConnection.disconnect()).thenReturn(Mono.empty());
+    MessageChannel mockChatChannel = Mockito.mock(MessageChannel.class);
+    when(mockManager.isStarted()).thenReturn(true);
+    when(mockManager.getChatChannel()).thenReturn(CHAT_CHANNEL_ID);
+    when(mockClient.getChannelById(CHAT_CHANNEL_ID)).thenReturn(Mono.just(mockChatChannel));
+    when(mockChatChannel.createMessage(expectedSpec))
+        .thenReturn(MessageCreateMono.of(mockChatChannel).withEmbeds(expectedSpec));
+    // Required for internal createMessage operation
+    when(mockChatChannel.createMessage(any(MessageCreateSpec.class))).thenReturn(Mono.empty());
 
-    AutoLeave tgr = new AutoLeave();
+    SelfBoot tgr = new SelfBoot();
     tgr.handle(mockEvent).block();
-
-    verify(mockManager, times(0)).stop(mockClient);
-    verify(mockVoiceConnection, times(0)).disconnect();
+    verify(mockChatChannel, times(1)).createMessage(expectedSpec);
   }
 }
