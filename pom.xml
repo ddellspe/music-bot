@@ -3,10 +3,10 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>net.ddellspe</groupId>
     <artifactId>music-bot</artifactId>
-    <version>1.5.0-SNAPSHOT</version>
+    <version>1.5.0</version>
     <scm>
         <connection>scm:git:git@github.com:ddellspe/${project.artifactId}</connection>
-        <tag>HEAD</tag>
+        <tag>v1.5.0</tag>
         <url>https://github.com/ddellspe/${project.artifactId}</url>
     </scm>
     <properties>
