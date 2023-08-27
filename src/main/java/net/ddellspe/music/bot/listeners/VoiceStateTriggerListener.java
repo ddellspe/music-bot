@@ -17,7 +17,6 @@ public class VoiceStateTriggerListener {
 
   public Mono<Void> handle(VoiceStateUpdateEvent event) {
     return Flux.fromIterable(commands)
-        .filter(___ -> !event.getCurrent().getUserId().equals(event.getClient().getSelfId()))
         .filter(command -> command.isCorrectEventType(event))
         .filter(command -> command.isCorrectChannel(event))
         // Multiple Audio Manager Trigger Commands may respond to a single event, so we can't use

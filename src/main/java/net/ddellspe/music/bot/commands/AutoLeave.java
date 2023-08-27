@@ -18,7 +18,8 @@ public class AutoLeave implements VoiceStateTrigger {
 
   @Override
   public boolean isCorrectEventType(VoiceStateUpdateEvent event) {
-    return event.isMoveEvent() || event.isLeaveEvent();
+    return !event.getCurrent().getUserId().equals(event.getClient().getSelfId())
+        && (event.isMoveEvent() || event.isLeaveEvent());
   }
 
   @Override
