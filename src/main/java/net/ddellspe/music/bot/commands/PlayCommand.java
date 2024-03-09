@@ -89,6 +89,9 @@ public class PlayCommand implements PrefixMessageResponseCommand {
   }
 
   void playTrack(MusicAudioManager manager, String query, MessageCreateEvent event) {
+    if (query.contains("music.youtube")) {
+      query = query.replace("music.youtube", "youtube");
+    }
     MusicAudioManager.PLAYER_MANAGER.loadItemOrdered(
         manager, query, new MusicAudioLoadResultHandler(event, query));
   }
