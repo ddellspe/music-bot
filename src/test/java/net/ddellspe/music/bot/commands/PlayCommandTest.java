@@ -151,4 +151,23 @@ public class PlayCommandTest {
     verify(MusicAudioManager.PLAYER_MANAGER, times(1))
         .loadItemOrdered(eq(mockManager), eq("song"), any(MusicAudioLoadResultHandler.class));
   }
+
+  @Test
+  public void testInVoiceChannelStartedAndQueuesYouTubeMusicLink() {
+    Member mockMember = Mockito.mock(Member.class);
+    VoiceState mockState = Mockito.mock(VoiceState.class);
+    MusicAudioManager.PLAYER_MANAGER = Mockito.mock(AudioPlayerManager.class);
+
+    // Quick null the voice channel output
+    when(mockMessage.getContent()).thenReturn("!play music.youtube");
+    when(mockEvent.getMember()).thenReturn(Optional.of(mockMember));
+    when(mockMember.getVoiceState()).thenReturn(Mono.just(mockState));
+    when(mockState.getChannelId()).thenReturn(Optional.of(VOICE_CHANNEL_ID));
+    when(mockManager.isStarted()).thenReturn(true, true);
+
+    PlayCommand cmd = new PlayCommand();
+    cmd.handle(mockEvent).block();
+    verify(MusicAudioManager.PLAYER_MANAGER, times(1))
+        .loadItemOrdered(eq(mockManager), eq("youtube"), any(MusicAudioLoadResultHandler.class));
+  }
 }
