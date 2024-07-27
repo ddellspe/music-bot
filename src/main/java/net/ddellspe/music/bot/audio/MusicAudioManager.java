@@ -6,6 +6,7 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
 import com.sedmelluq.discord.lavaplayer.track.playback.NonAllocatingAudioFrameBuffer;
+import dev.lavalink.youtube.YoutubeAudioSourceManager;
 import discord4j.common.JacksonResources;
 import discord4j.common.util.Snowflake;
 import discord4j.core.GatewayDiscordClient;
@@ -41,7 +42,11 @@ public class MusicAudioManager {
     PLAYER_MANAGER = new DefaultAudioPlayerManager();
     // This is an optimization strategy that Discord4J can utilize to minimize allocations
     PLAYER_MANAGER.getConfiguration().setFrameBufferFactory(NonAllocatingAudioFrameBuffer::new);
-    AudioSourceManagers.registerRemoteSources(PLAYER_MANAGER);
+    YoutubeAudioSourceManager ytSourceManager = new YoutubeAudioSourceManager();
+    PLAYER_MANAGER.registerSourceManager(ytSourceManager);
+    AudioSourceManagers.registerRemoteSources(
+        PLAYER_MANAGER,
+        com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager.class);
     AudioSourceManagers.registerLocalSource(PLAYER_MANAGER);
   }
 
