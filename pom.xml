@@ -79,8 +79,7 @@
             <dependency>
                 <groupId>dev.lavalink.youtube</groupId>
                 <artifactId>common</artifactId>
-                <!--1.13.1 or later likely to have the fix -->
-                <version>0e5cfca4e88c32db430ce76e6866b13035c85d22-SNAPSHOT</version>
+                <version>1.13.1</version>
             </dependency>
             <dependency>
                 <groupId>io.projectreactor</groupId>
@@ -184,17 +183,6 @@
             <id>lavalink</id>
             <name>lavalink</name>
             <url>https://maven.lavalink.dev/releases</url>
-        </repository>
-        <repository>
-            <releases>
-                <enabled>false</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-            <id>lavalink-snapshots</id>
-            <name>lavalink snapshots</name>
-            <url>https://maven.lavalink.dev/snapshots</url>
         </repository>
         <repository>
             <releases>
