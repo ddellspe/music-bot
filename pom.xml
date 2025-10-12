@@ -11,7 +11,7 @@
     </scm>
     <properties>
         <fmt-maven-plugin.version>2.29</fmt-maven-plugin.version>
-        <jacoco.version>0.8.13</jacoco.version>
+        <jacoco.version>0.8.14</jacoco.version>
         <jib-maven-plugin.version>3.4.6</jib-maven-plugin.version>
         <maven-clean-plugin.version>3.5.0</maven-clean-plugin.version>
         <maven-compiler-plugin.version>3.14.1</maven-compiler-plugin.version>
@@ -79,7 +79,7 @@
             <dependency>
                 <groupId>dev.lavalink.youtube</groupId>
                 <artifactId>common</artifactId>
-                <version>1.14.0</version>
+                <version>1.15.0</version>
             </dependency>
             <dependency>
                 <groupId>io.projectreactor</groupId>
