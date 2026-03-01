@@ -12,8 +12,8 @@ import discord4j.common.util.Snowflake;
 import discord4j.core.GatewayDiscordClient;
 import discord4j.core.object.entity.channel.MessageChannel;
 import discord4j.core.object.entity.channel.VoiceChannel;
+import discord4j.core.spec.AudioChannelJoinSpec;
 import discord4j.core.spec.EmbedCreateSpec;
-import discord4j.core.spec.VoiceChannelJoinSpec;
 import discord4j.rest.util.Color;
 import discord4j.voice.VoiceConnection;
 import java.io.IOException;
@@ -217,7 +217,7 @@ public class MusicAudioManager {
             channel ->
                 channel
                     .join(
-                        VoiceChannelJoinSpec.builder()
+                        AudioChannelJoinSpec.builder()
                             .selfDeaf(true)
                             .provider(provider)
                             .timeout(Duration.of(2000, ChronoUnit.MILLIS))
