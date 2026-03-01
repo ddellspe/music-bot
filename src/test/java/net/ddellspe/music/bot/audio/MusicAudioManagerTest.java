@@ -16,10 +16,10 @@ import discord4j.core.object.VoiceState;
 import discord4j.core.object.entity.Member;
 import discord4j.core.object.entity.channel.MessageChannel;
 import discord4j.core.object.entity.channel.VoiceChannel;
+import discord4j.core.spec.AudioChannelJoinSpec;
 import discord4j.core.spec.EmbedCreateSpec;
 import discord4j.core.spec.MessageCreateMono;
 import discord4j.core.spec.MessageCreateSpec;
-import discord4j.core.spec.VoiceChannelJoinSpec;
 import discord4j.rest.util.Color;
 import discord4j.voice.VoiceConnection;
 import discord4j.voice.VoiceConnectionRegistry;
@@ -119,8 +119,8 @@ public class MusicAudioManagerTest {
   @Test
   public void testStartWithVoiceChannelAvailableAndUsersAvailable() {
     String voiceChannelName = "Channel";
-    ArgumentCaptor<VoiceChannelJoinSpec> joinSpecCaptor =
-        ArgumentCaptor.forClass(VoiceChannelJoinSpec.class);
+    ArgumentCaptor<AudioChannelJoinSpec> joinSpecCaptor =
+        ArgumentCaptor.forClass(AudioChannelJoinSpec.class);
     EmbedCreateSpec expectedMessageSpec =
         EmbedCreateSpec.builder()
             .color(Color.MEDIUM_SEA_GREEN)
@@ -143,7 +143,7 @@ public class MusicAudioManagerTest {
         .thenReturn(MessageCreateMono.of(mockChatChannel).withEmbeds(expectedMessageSpec));
     // Required for internal createMessage operation
     when(mockChatChannel.createMessage(any(MessageCreateSpec.class))).thenReturn(Mono.empty());
-    when(mockVoiceChannel.join(any(VoiceChannelJoinSpec.class)))
+    when(mockVoiceChannel.join(any(AudioChannelJoinSpec.class)))
         .thenReturn(Mono.just(Mockito.mock(VoiceConnection.class)));
 
     when(mockAudioManager.createPlayer()).thenReturn(mockAudioPlayer);
@@ -157,7 +157,7 @@ public class MusicAudioManagerTest {
     verify(mockVoiceChannel).join(joinSpecCaptor.capture());
     verify(mockScheduler, times(1)).setClient(mockClient);
     verify(mockChatChannel, times(1)).createMessage(expectedMessageSpec);
-    VoiceChannelJoinSpec joinSpec = joinSpecCaptor.getValue();
+    AudioChannelJoinSpec joinSpec = joinSpecCaptor.getValue();
     assertTrue(joinSpec.selfDeaf());
     assertEquals(mockProvider, joinSpec.provider());
     assertEquals(Duration.of(2000, ChronoUnit.MILLIS), joinSpec.timeout());
@@ -166,8 +166,8 @@ public class MusicAudioManagerTest {
   @Test
   public void testStartWithVoiceChannelAvailableAndUsersAvailableTimesOut() {
     String voiceChannelName = "Channel";
-    ArgumentCaptor<VoiceChannelJoinSpec> joinSpecCaptor =
-        ArgumentCaptor.forClass(VoiceChannelJoinSpec.class);
+    ArgumentCaptor<AudioChannelJoinSpec> joinSpecCaptor =
+        ArgumentCaptor.forClass(AudioChannelJoinSpec.class);
     EmbedCreateSpec expectedMessageSpec =
         EmbedCreateSpec.builder()
             .color(Color.RED)
@@ -190,7 +190,7 @@ public class MusicAudioManagerTest {
         .thenReturn(MessageCreateMono.of(mockChatChannel).withEmbeds(expectedMessageSpec));
     // Required for internal createMessage operation
     when(mockChatChannel.createMessage(any(MessageCreateSpec.class))).thenReturn(Mono.empty());
-    when(mockVoiceChannel.join(any(VoiceChannelJoinSpec.class)))
+    when(mockVoiceChannel.join(any(AudioChannelJoinSpec.class)))
         .thenReturn(
             Mono.error(
                 new TimeoutException(
@@ -208,7 +208,7 @@ public class MusicAudioManagerTest {
     verify(mockVoiceChannel).join(joinSpecCaptor.capture());
     verify(mockScheduler, times(1)).setClient(mockClient);
     verify(mockChatChannel, times(1)).createMessage(expectedMessageSpec);
-    VoiceChannelJoinSpec joinSpec = joinSpecCaptor.getValue();
+    AudioChannelJoinSpec joinSpec = joinSpecCaptor.getValue();
     assertTrue(joinSpec.selfDeaf());
     assertEquals(mockProvider, joinSpec.provider());
     assertEquals(Duration.of(2000, ChronoUnit.MILLIS), joinSpec.timeout());
