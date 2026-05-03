@@ -3,6 +3,8 @@ package net.ddellspe.music;
 import discord4j.core.DiscordClientBuilder;
 import discord4j.core.event.domain.VoiceStateUpdateEvent;
 import discord4j.core.event.domain.message.MessageCreateEvent;
+import discord4j.gateway.intent.Intent;
+import discord4j.gateway.intent.IntentSet;
 import discord4j.rest.RestClient;
 import net.ddellspe.music.bot.listeners.MessageResponseCommandListener;
 import net.ddellspe.music.bot.listeners.PrefixMessageResponseCommandListener;
@@ -21,6 +23,8 @@ public class MusicBot {
 
     DiscordClientBuilder.create(System.getenv("BOT_TOKEN"))
         .build()
+        .gateway()
+        .setEnabledIntents(IntentSet.nonPrivileged().or(IntentSet.of(Intent.MESSAGE_CONTENT)))
         .withGateway(
             gatewayClient -> {
               MessageResponseCommandListener messageResponseCommandListener =
