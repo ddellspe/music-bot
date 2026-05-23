@@ -7,6 +7,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
 import discord4j.common.util.Snowflake;
@@ -32,13 +33,13 @@ public class ListCommandTest {
   private static final Snowflake GUILD_ID = Snowflake.of("123456");
   private MusicAudioManager mockManager;
   private MusicAudioTrackScheduler mockScheduler;
-  private com.sedmelluq.discord.lavaplayer.player.AudioPlayer mockPlayer;
+  private AudioPlayer mockPlayer;
 
   @BeforeEach
   public void before() {
     mockManager = Mockito.mock(MusicAudioManager.class);
     mockScheduler = Mockito.mock(MusicAudioTrackScheduler.class);
-    mockPlayer = Mockito.mock(com.sedmelluq.discord.lavaplayer.player.AudioPlayer.class);
+    mockPlayer = Mockito.mock(AudioPlayer.class);
     when(mockManager.getScheduler()).thenReturn(mockScheduler);
     when(mockScheduler.getPlayer()).thenReturn(mockPlayer);
     when(mockPlayer.getPlayingTrack()).thenReturn(null);
