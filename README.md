@@ -83,12 +83,23 @@ Any call to add new songs will immediately start their playing.
 | :-: |
 | `!play <audio url>` |
 
-This command adds a song or full playlist to the internal bot playlist and begins playback.
+This command adds a song to the internal bot playlist and begins playback. If a playlist URL is supplied, only the targeted or first track of the playlist will be added (with a notice mentioning how to add the entire playlist instead).
 If there is no audio currently playing, playback will begin as soon as song resolution takes place.
-In there is audio currently playing, the song will be added to the internal playlist.
+If there is audio currently playing, the song will be added to the end of the internal playlist (indicating its queue position).
 There is currently no support for generic searching via keyboard at this point, so you must provide a full url.
 When the bot finds the appropriate track to go along with the url, it will respond that it's been added to the queue.
-There will also be track information (Title, Artist, Duration) available in the response from the command.
+There will also be track information (Title, Artist, Duration, and Queue Position) available in the response from the command.
+If the track isn't accessible or not found, the bot will provide an error response indicating such.
+
+### Play All
+| Command |
+| :-: |
+| `!playall <playlist url>` |
+
+This command adds all songs from a full playlist to the end of the internal bot playlist and begins playback.
+If there is no audio currently playing, playback of the first song will begin immediately, and subsequent songs will be queued.
+If there is audio currently playing, all tracks of the playlist will be queued at the end of the queue.
+The bot will respond with a playlist summary showing the queue position range (e.g. `50 - 99`) and a preview of the first 5 tracks numbered from their actual queue positions.
 If the track isn't accessible or not found, the bot will provide an error response indicating such.
 
 ### Force Play
@@ -96,12 +107,21 @@ If the track isn't accessible or not found, the bot will provide an error respon
 | :-: |
 | `!fplay <audio url>` |
 
-This command adds a song to be played immediately with the items in the playlist being queued immediately after.
+This command adds a single song to be played immediately. If a playlist URL is supplied, only the targeted or first track will be played. Any existing playlist items are queued immediately after the forced track.
 If there is no audio currently playing, playback will begin as soon as song resolution takes place.
-In there is audio currently playing, the song will begin as soon as song resolution takes place.
+If there is audio currently playing, the song will begin playing immediately.
 There is currently no support for generic searching via keyboard at this point, so you must provide a full url.
 When the bot finds the appropriate track to go along with the url, it will respond that it's playing.
 There will also be track information (Title, Artist, Duration) available in the response from the command.
+If the track isn't accessible or not found, the bot will provide an error response indicating such.
+
+### Force Play All
+| Command |
+| :-: |
+| `!fplayall <playlist url>` |
+
+This command forces the first track of a playlist to play immediately, and queues all subsequent tracks of the playlist at the front of the queue.
+The bot will respond with a playlist summary and a preview of the first 5 tracks.
 If the track isn't accessible or not found, the bot will provide an error response indicating such.
 
 ### Interrupt
@@ -109,10 +129,10 @@ If the track isn't accessible or not found, the bot will provide an error respon
 | :-: |
 | `!interrupt <audio url>` |
 
-This command adds a song to be played immediately with the items in the playlist being queued immediately after with the currently playing song being re-queued.
+This command adds a single song to be played immediately with the currently playing song being re-queued. If a playlist URL is supplied, only the targeted or first track will be played.
 If there is no audio currently playing, playback will begin as soon as song resolution takes place.
-In there is audio currently playing, the song will begin as soon as song resolution takes place.
-The currently playing song will be re-queued after the song/playlist at the existing position of the song at playback.
+If there is audio currently playing, the song will begin as soon as song resolution takes place.
+The currently playing song will be re-queued after the interrupted song.
 There is currently no support for generic searching via keyboard at this point, so you must provide a full url.
 When the bot finds the appropriate track to go along with the url, it will respond that it's playing.
 There will also be track information (Title, Artist, Duration) available in the response from the command.
@@ -135,7 +155,8 @@ If there is a next track, the bot will skip to the next track and the informatio
 | `!list [limit]` |
 
 This command displays the upcoming tracks in the playlist queue.
-The currently playing track is always shown as the first item, marked with a `(Currently Playing)` label.
+The currently playing track is always shown first, marked with a `▶` symbol and a `(Currently Playing)` label, but is not assigned a queue number.
+Queued tracks are numbered starting from `1`.
 If a custom limit is not provided, the command defaults to showing up to 5 tracks.
 To request a custom number of tracks, you can append a limit (e.g. `!list 10`).
 Each track in the list displays its Title, Artist, Duration, and a clickable Markdown hyperlink to the video/audio source.

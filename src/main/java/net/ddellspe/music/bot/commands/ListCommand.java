@@ -66,8 +66,7 @@ public class ListCommand implements PrefixMessageResponseCommand {
         if (limit <= 0) {
           limit = 5;
         }
-      } catch (NumberFormatException e) {
-        limit = 5;
+      } catch (NumberFormatException ignored) {
       }
     }
 
@@ -92,7 +91,8 @@ public class ListCommand implements PrefixMessageResponseCommand {
       totalTracksCount++;
     }
 
-    final int displayCount = Math.min(limit, totalTracksCount);
+    final int queueDisplayCount = Math.min(limit, queue.size());
+    final int displayCount = queueDisplayCount + (playingTrack != null ? 1 : 0);
     EmbedCreateSpec.Builder embedBuilder =
         EmbedCreateSpec.builder()
             .color(Color.MEDIUM_SEA_GREEN)
@@ -102,7 +102,7 @@ public class ListCommand implements PrefixMessageResponseCommand {
     int fieldIndex = 1;
     if (playingTrack != null) {
       embedBuilder.addField(
-          "1. " + playingTrack.getInfo().title + " (Currently Playing)",
+          "\u25B6 " + playingTrack.getInfo().title + " (Currently Playing)",
           "Artist: "
               + playingTrack.getInfo().author
               + " | Duration: "
@@ -111,10 +111,9 @@ public class ListCommand implements PrefixMessageResponseCommand {
               + playingTrack.getInfo().uri
               + ")",
           false);
-      fieldIndex++;
     }
 
-    for (int i = 0; i < displayCount - (playingTrack != null ? 1 : 0); i++) {
+    for (int i = 0; i < queueDisplayCount; i++) {
       AudioTrack track = queue.get(i);
       embedBuilder.addField(
           fieldIndex + ". " + track.getInfo().title,
