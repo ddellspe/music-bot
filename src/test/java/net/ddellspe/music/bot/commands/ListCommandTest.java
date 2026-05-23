@@ -391,7 +391,7 @@ public class ListCommandTest {
             .color(Color.MEDIUM_SEA_GREEN)
             .title("Upcoming Playlist (Next 1 of 1 tracks)")
             .addField(
-                "1. Playing Title (Currently Playing)",
+                "\u25B6 Playing Title (Currently Playing)",
                 "Artist: Playing Author | Duration: 30 sec. | [Video Link](test)",
                 false)
             .build();
@@ -442,11 +442,11 @@ public class ListCommandTest {
             .color(Color.MEDIUM_SEA_GREEN)
             .title("Upcoming Playlist (Next 3 of 3 tracks)")
             .addField(
-                "1. Playing Title (Currently Playing)",
+                "\u25B6 Playing Title (Currently Playing)",
                 "Artist: Playing Author | Duration: 30 sec. | [Video Link](test)",
                 false)
-            .addField("2. Title 1", "Artist: Author 1 | Duration: 1:05 | [Video Link](test)", false)
-            .addField("3. Title 2", "Artist: Author 2 | Duration: 1:05 | [Video Link](test)", false)
+            .addField("1. Title 1", "Artist: Author 1 | Duration: 1:05 | [Video Link](test)", false)
+            .addField("2. Title 2", "Artist: Author 2 | Duration: 1:05 | [Video Link](test)", false)
             .build();
 
     when(mockManager.isStarted()).thenReturn(true);
