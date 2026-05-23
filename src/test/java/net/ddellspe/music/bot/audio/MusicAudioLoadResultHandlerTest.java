@@ -114,16 +114,27 @@ public class MusicAudioLoadResultHandlerTest {
     MessageChannel mockChannel = Mockito.mock(MessageChannel.class);
     AudioTrack mockAudioTrack = Mockito.mock(AudioTrack.class);
     AudioTrack mockAudioTrack2 = Mockito.mock(AudioTrack.class);
-    AudioTrackInfo mockAudioTrackInfo =
-        new AudioTrackInfo("Title", "Author", 30000L, "identifier", true, "test");
+    AudioTrackInfo info1 =
+        new AudioTrackInfo("Title 1", "Author 1", 30000L, "identifier", true, "test");
+    AudioTrackInfo info2 =
+        new AudioTrackInfo("Title 2", "Author 2", 30000L, "identifier", true, "test");
+    when(mockAudioTrack.getInfo()).thenReturn(info1);
+    when(mockAudioTrack2.getInfo()).thenReturn(info2);
+
     AudioPlaylist mockPlaylist = Mockito.mock(AudioPlaylist.class);
+    when(mockPlaylist.getName()).thenReturn("PlaylistName");
+    when(mockPlaylist.getTracks()).thenReturn(List.of(mockAudioTrack, mockAudioTrack2));
+
     EmbedCreateSpec embedSpec =
         EmbedCreateSpec.builder()
             .color(Color.MEDIUM_SEA_GREEN)
-            .title("Added track to queue")
-            .addField("Track Title", "Title", false)
-            .addField("Track Artist", "Author", false)
-            .addField("Duration", "30 sec.", false)
+            .title("Added playlist to queue")
+            .description("**Playlist:** [PlaylistName]()")
+            .addField(
+                "1. Title 1", "Artist: Author 1 | Duration: 30 sec. | [Video Link](test)", false)
+            .addField(
+                "2. Title 2", "Artist: Author 2 | Duration: 30 sec. | [Video Link](test)", false)
+            .footer("(total of 2)", null)
             .build();
 
     when(mockScheduler.play(mockAudioTrack, true, false)).thenReturn(true);
@@ -134,8 +145,6 @@ public class MusicAudioLoadResultHandlerTest {
         .thenReturn(MessageCreateMono.of(mockChannel).withEmbeds(embedSpec));
     // Necessary for embed create spec
     when(mockChannel.createMessage(any(MessageCreateSpec.class))).thenReturn(Mono.empty());
-    when(mockAudioTrack2.getInfo()).thenReturn(mockAudioTrackInfo);
-    when(mockPlaylist.getTracks()).thenReturn(List.of(mockAudioTrack, mockAudioTrack2));
 
     MusicAudioLoadResultHandler handler = new MusicAudioLoadResultHandler(mockEvent, query, true);
     handler.playlistLoaded(mockPlaylist);
@@ -151,14 +160,19 @@ public class MusicAudioLoadResultHandlerTest {
     AudioTrack mockAudioTrack = Mockito.mock(AudioTrack.class);
     AudioTrackInfo mockAudioTrackInfo =
         new AudioTrackInfo("Title", "Author", 30000L, "identifier", true, "test");
+    when(mockAudioTrack.getInfo()).thenReturn(mockAudioTrackInfo);
+
     AudioPlaylist mockPlaylist = Mockito.mock(AudioPlaylist.class);
+    when(mockPlaylist.getName()).thenReturn("PlaylistName");
+    when(mockPlaylist.getTracks()).thenReturn(List.of(mockAudioTrack));
+
     EmbedCreateSpec embedSpec =
         EmbedCreateSpec.builder()
             .color(Color.MEDIUM_SEA_GREEN)
-            .title("Added track to queue")
-            .addField("Track Title", "Title", false)
-            .addField("Track Artist", "Author", false)
-            .addField("Duration", "30 sec.", false)
+            .title("Added playlist to queue")
+            .description("**Playlist:** [PlaylistName]()")
+            .addField("1. Title", "Artist: Author | Duration: 30 sec. | [Video Link](test)", false)
+            .footer("(total of 1)", null)
             .build();
 
     when(mockEvent.getMessage()).thenReturn(mockMessage);
@@ -168,8 +182,6 @@ public class MusicAudioLoadResultHandlerTest {
         .thenReturn(MessageCreateMono.of(mockChannel).withEmbeds(embedSpec));
     // Necessary for embed create spec
     when(mockChannel.createMessage(any(MessageCreateSpec.class))).thenReturn(Mono.empty());
-    when(mockAudioTrack.getInfo()).thenReturn(mockAudioTrackInfo);
-    when(mockPlaylist.getTracks()).thenReturn(List.of(mockAudioTrack));
 
     MusicAudioLoadResultHandler handler = new MusicAudioLoadResultHandler(mockEvent, query);
     handler.playlistLoaded(mockPlaylist);
@@ -229,5 +241,53 @@ public class MusicAudioLoadResultHandlerTest {
     handler.loadFailed(exception);
 
     verify(mockChannel, times(1)).createMessage(embedSpec);
+  }
+
+  @Test
+  public void testPlayListLoadedMoreThanFiveTracks() {
+    Message mockMessage = Mockito.mock(Message.class);
+    MessageChannel mockChannel = Mockito.mock(MessageChannel.class);
+    List<AudioTrack> tracks = new java.util.ArrayList<>();
+    for (int i = 0; i < 7; i++) {
+      AudioTrack track = Mockito.mock(AudioTrack.class);
+      AudioTrackInfo info =
+          new AudioTrackInfo(
+              "Title " + (i + 1), "Author " + (i + 1), 30000L, "identifier", true, "test");
+      when(track.getInfo()).thenReturn(info);
+      when(mockScheduler.play(track)).thenReturn(false);
+      tracks.add(track);
+    }
+
+    AudioPlaylist mockPlaylist = Mockito.mock(AudioPlaylist.class);
+    when(mockPlaylist.getName()).thenReturn("PlaylistName");
+    when(mockPlaylist.getTracks()).thenReturn(tracks);
+
+    EmbedCreateSpec.Builder expectedBuilder =
+        EmbedCreateSpec.builder()
+            .color(Color.MEDIUM_SEA_GREEN)
+            .title("Added playlist to queue")
+            .description("**Playlist:** [PlaylistName]()");
+    for (int i = 0; i < 5; i++) {
+      expectedBuilder.addField(
+          "" + (i + 1) + ". Title " + (i + 1),
+          "Artist: Author " + (i + 1) + " | Duration: 30 sec. | [Video Link](test)",
+          false);
+    }
+    expectedBuilder.footer("...and 2 more tracks (total of 7)", null);
+    EmbedCreateSpec expectedEmbed = expectedBuilder.build();
+
+    when(mockEvent.getMessage()).thenReturn(mockMessage);
+    when(mockMessage.getChannel()).thenReturn(Mono.just(mockChannel));
+    when(mockChannel.createMessage(expectedEmbed))
+        .thenReturn(MessageCreateMono.of(mockChannel).withEmbeds(expectedEmbed));
+    when(mockChannel.createMessage(any(MessageCreateSpec.class))).thenReturn(Mono.empty());
+
+    MusicAudioLoadResultHandler handler = new MusicAudioLoadResultHandler(mockEvent, query);
+    handler.playlistLoaded(mockPlaylist);
+
+    for (AudioTrack track : tracks) {
+      verify(mockScheduler, times(1)).play(track);
+    }
+    verify(mockChannel, times(1)).createMessage(expectedEmbed);
   }
 }
