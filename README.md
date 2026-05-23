@@ -128,3 +128,17 @@ To initiate this command, in the specific chat channel send the message `!skip`.
 Upon calling of this command, the bot (if running) will skip to the next track.
 If there is no next track in the queue, it will send a message indicating that there is no track to skip to.
 If there is a next track, the bot will skip to the next track and the information for that track will be shown.
+
+### List
+| Command |
+| :-: |
+| `!list [limit]` |
+
+This command displays the upcoming tracks in the playlist queue.
+The currently playing track is always shown as the first item, marked with a `(Currently Playing)` label.
+If a custom limit is not provided, the command defaults to showing up to 5 tracks.
+To request a custom number of tracks, you can append a limit (e.g. `!list 10`).
+Each track in the list displays its Title, Artist, Duration, and a clickable Markdown hyperlink to the video/audio source.
+If there are more tracks in the queue than the displayed limit, the footer will summarize how many additional tracks are queued.
+If the queue and player are empty, the bot will respond with an embed indicating the playlist is empty.
+
