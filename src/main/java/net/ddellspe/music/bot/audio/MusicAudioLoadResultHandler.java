@@ -77,6 +77,7 @@ public class MusicAudioLoadResultHandler implements AudioLoadResultHandler {
     MusicAudioTrackScheduler scheduler =
         MusicAudioManager.of(event.getGuildId().get()).getScheduler();
     int count = 0;
+    int addedCount = 0;
 
     for (AudioTrack audioTrack : audioPlaylist.getTracks()) {
       final boolean playing;
@@ -90,25 +91,46 @@ public class MusicAudioLoadResultHandler implements AudioLoadResultHandler {
         playing = scheduler.play(audioTrack);
       }
       if (!playing) {
-        event
-            .getMessage()
-            .getChannel()
-            .flatMap(
-                channel ->
-                    channel.createMessage(
-                        EmbedCreateSpec.builder()
-                            .color(Color.MEDIUM_SEA_GREEN)
-                            .title("Added track to queue")
-                            .addField("Track Title", audioTrack.getInfo().title, false)
-                            .addField("Track Artist", audioTrack.getInfo().author, false)
-                            .addField(
-                                "Duration",
-                                MessageUtils.getDurationAsMinSecond(audioTrack.getInfo().length),
-                                false)
-                            .build()))
-            .subscribe();
+        addedCount++;
       }
       count++;
+    }
+
+    if (addedCount > 0) {
+      final int totalTracks = audioPlaylist.getTracks().size();
+      EmbedCreateSpec.Builder embedBuilder =
+          EmbedCreateSpec.builder()
+              .color(Color.MEDIUM_SEA_GREEN)
+              .title("Added playlist to queue")
+              .description("**Playlist:** [" + audioPlaylist.getName() + "](" + query + ")");
+
+      final int previewLimit = Math.min(5, totalTracks);
+      for (int i = 0; i < previewLimit; i++) {
+        AudioTrack track = audioPlaylist.getTracks().get(i);
+        embedBuilder.addField(
+            (i + 1) + ". " + track.getInfo().title,
+            "Artist: "
+                + track.getInfo().author
+                + " | Duration: "
+                + MessageUtils.getDurationAsMinSecond(track.getInfo().length)
+                + " | [Video Link]("
+                + track.getInfo().uri
+                + ")",
+            false);
+      }
+
+      if (totalTracks > 5) {
+        embedBuilder.footer(
+            "...and " + (totalTracks - 5) + " more tracks (total of " + totalTracks + ")", null);
+      } else {
+        embedBuilder.footer("(total of " + totalTracks + ")", null);
+      }
+
+      event
+          .getMessage()
+          .getChannel()
+          .flatMap(channel -> channel.createMessage(embedBuilder.build()))
+          .subscribe();
     }
   }
 

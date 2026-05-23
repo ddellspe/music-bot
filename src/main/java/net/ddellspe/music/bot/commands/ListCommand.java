@@ -71,8 +71,9 @@ public class ListCommand implements PrefixMessageResponseCommand {
       }
     }
 
+    AudioTrack playingTrack = manager.getScheduler().getPlayer().getPlayingTrack();
     List<AudioTrack> queue = manager.getScheduler().getQueue();
-    if (queue.isEmpty()) {
+    if (playingTrack == null && queue.isEmpty()) {
       return event
           .getMessage()
           .getChannel()
@@ -86,16 +87,37 @@ public class ListCommand implements PrefixMessageResponseCommand {
           .then();
     }
 
-    final int displayCount = Math.min(limit, queue.size());
+    int totalTracksCount = queue.size();
+    if (playingTrack != null) {
+      totalTracksCount++;
+    }
+
+    final int displayCount = Math.min(limit, totalTracksCount);
     EmbedCreateSpec.Builder embedBuilder =
         EmbedCreateSpec.builder()
             .color(Color.MEDIUM_SEA_GREEN)
-            .title("Upcoming Playlist (Next " + displayCount + " of " + queue.size() + " tracks)");
+            .title(
+                "Upcoming Playlist (Next " + displayCount + " of " + totalTracksCount + " tracks)");
 
-    for (int i = 0; i < displayCount; i++) {
+    int fieldIndex = 1;
+    if (playingTrack != null) {
+      embedBuilder.addField(
+          "1. " + playingTrack.getInfo().title + " (Currently Playing)",
+          "Artist: "
+              + playingTrack.getInfo().author
+              + " | Duration: "
+              + MessageUtils.getDurationAsMinSecond(playingTrack.getInfo().length)
+              + " | [Video Link]("
+              + playingTrack.getInfo().uri
+              + ")",
+          false);
+      fieldIndex++;
+    }
+
+    for (int i = 0; i < displayCount - (playingTrack != null ? 1 : 0); i++) {
       AudioTrack track = queue.get(i);
       embedBuilder.addField(
-          (i + 1) + ". " + track.getInfo().title,
+          fieldIndex + ". " + track.getInfo().title,
           "Artist: "
               + track.getInfo().author
               + " | Duration: "
@@ -104,6 +126,7 @@ public class ListCommand implements PrefixMessageResponseCommand {
               + track.getInfo().uri
               + ")",
           false);
+      fieldIndex++;
     }
 
     return event
