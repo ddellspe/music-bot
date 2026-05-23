@@ -2,6 +2,7 @@ package net.ddellspe.music.bot.audio;
 
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.event.AudioEventAdapter;
+import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
 import discord4j.common.util.Snowflake;
@@ -12,12 +13,17 @@ import discord4j.rest.util.Color;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import net.ddellspe.music.bot.utils.MessageUtils;
 
 public class MusicAudioTrackScheduler extends AudioEventAdapter {
+  private static final int MAX_RETRIES = 2;
+
   private final List<AudioTrack> queue;
   private final AudioPlayer player;
   private final MusicAudioManager manager;
+  private final Map<AudioTrack, Integer> trackRetries = new ConcurrentHashMap<>();
   private GatewayDiscordClient client;
   private boolean currentlyPlaying;
   private AudioTrack currentTrack;
@@ -137,6 +143,7 @@ public class MusicAudioTrackScheduler extends AudioEventAdapter {
       queue.clear();
     }
     player.stopTrack();
+    trackRetries.clear();
   }
 
   public boolean isCurrentlyPlaying() {
@@ -185,11 +192,64 @@ public class MusicAudioTrackScheduler extends AudioEventAdapter {
       final AudioPlayer player, final AudioTrack track, final AudioTrackEndReason endReason) {
     currentlyPlaying = false;
     currentTrack = null;
+    trackRetries.remove(track);
     switch (endReason) {
       case FINISHED:
       case LOAD_FAILED:
         skip();
         break;
+    }
+  }
+
+  @Override
+  public void onTrackException(AudioPlayer player, AudioTrack track, FriendlyException exception) {
+    int attempts = trackRetries.getOrDefault(track, 0);
+    trackRetries.remove(track);
+
+    if (attempts < MAX_RETRIES) {
+      AudioTrack retryTrack = track.makeClone();
+      trackRetries.put(retryTrack, attempts + 1);
+      queue.add(0, retryTrack);
+
+      if (client != null) {
+        Snowflake chatChannel = manager.getChatChannel();
+        client
+            .getChannelById(chatChannel)
+            .cast(MessageChannel.class)
+            .flatMap(
+                channel ->
+                    channel.createMessage(
+                        EmbedCreateSpec.builder()
+                            .color(Color.of(255, 165, 0))
+                            .title("Playback Failed - Retrying")
+                            .description(
+                                String.format(
+                                    "An error occurred playing track: **%s**\n*Retrying (Attempt %d of %d)...*",
+                                    track.getInfo().title, attempts + 1, MAX_RETRIES))
+                            .addField("Error Details", exception.getMessage(), false)
+                            .build()))
+            .subscribe();
+      }
+    } else {
+      if (client != null) {
+        Snowflake chatChannel = manager.getChatChannel();
+        client
+            .getChannelById(chatChannel)
+            .cast(MessageChannel.class)
+            .flatMap(
+                channel ->
+                    channel.createMessage(
+                        EmbedCreateSpec.builder()
+                            .color(Color.RED)
+                            .title("Playback Failed")
+                            .description(
+                                String.format(
+                                    "Track failed to play after %d retries: **%s**",
+                                    MAX_RETRIES, track.getInfo().title))
+                            .addField("Error Details", exception.getMessage(), false)
+                            .build()))
+            .subscribe();
+      }
     }
   }
 }

@@ -10,6 +10,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
+import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackEndReason;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
@@ -370,5 +371,228 @@ public class MusicAudioTrackSchedulerTest {
     assertEquals(mockExistingTrack, scheduler.getQueue().get(1));
     assertEquals(mockExistingTrack, scheduler.getQueue().get(2));
     assertEquals(mockTrack, scheduler.getQueue().get(3));
+  }
+
+  @Test
+  public void testOnTrackExceptionFirstFailureRetriesAndSendsMessage() {
+    AudioTrack mockTrack = Mockito.mock(AudioTrack.class);
+    AudioTrack mockClone = Mockito.mock(AudioTrack.class);
+    AudioTrackInfo info = new AudioTrackInfo("Test Title", "Test Author", 1000L, "id", true, "url");
+    when(mockTrack.getInfo()).thenReturn(info);
+    when(mockTrack.makeClone()).thenReturn(mockClone);
+    FriendlyException exception =
+        new FriendlyException(
+            "Error message", FriendlyException.Severity.COMMON, new RuntimeException("403"));
+
+    GatewayDiscordClient mockClient = Mockito.mock(GatewayDiscordClient.class);
+    MessageChannel mockChannel = Mockito.mock(MessageChannel.class);
+    Snowflake chatChannel = Snowflake.of("987654");
+    when(mockManager.getChatChannel()).thenReturn(chatChannel);
+    when(mockClient.getChannelById(chatChannel)).thenReturn(Mono.just(mockChannel));
+
+    EmbedCreateSpec embedSpec =
+        EmbedCreateSpec.builder()
+            .color(Color.of(255, 165, 0))
+            .title("Playback Failed - Retrying")
+            .description(
+                "An error occurred playing track: **Test Title**\n*Retrying (Attempt 1 of 2)...*")
+            .addField("Error Details", "Error message", false)
+            .build();
+    when(mockChannel.createMessage(embedSpec))
+        .thenReturn(MessageCreateMono.of(mockChannel).withEmbeds(embedSpec));
+    when(mockChannel.createMessage(any(MessageCreateSpec.class))).thenReturn(Mono.empty());
+
+    scheduler.setClient(mockClient);
+    scheduler.onTrackException(mockPlayer, mockTrack, exception);
+
+    assertEquals(1, scheduler.getQueue().size());
+    assertEquals(mockClone, scheduler.getQueue().get(0));
+    verify(mockChannel, times(1)).createMessage(embedSpec);
+  }
+
+  @Test
+  public void testOnTrackExceptionSecondFailureRetriesAndSendsMessage() {
+    AudioTrack mockTrack = Mockito.mock(AudioTrack.class);
+    AudioTrack mockClone1 = Mockito.mock(AudioTrack.class);
+    AudioTrack mockClone2 = Mockito.mock(AudioTrack.class);
+    AudioTrackInfo info = new AudioTrackInfo("Test Title", "Test Author", 1000L, "id", true, "url");
+    when(mockTrack.getInfo()).thenReturn(info);
+    when(mockClone1.getInfo()).thenReturn(info);
+    when(mockTrack.makeClone()).thenReturn(mockClone1);
+    when(mockClone1.makeClone()).thenReturn(mockClone2);
+    FriendlyException exception =
+        new FriendlyException(
+            "Error message", FriendlyException.Severity.COMMON, new RuntimeException("403"));
+
+    GatewayDiscordClient mockClient = Mockito.mock(GatewayDiscordClient.class);
+    MessageChannel mockChannel = Mockito.mock(MessageChannel.class);
+    Snowflake chatChannel = Snowflake.of("987654");
+    when(mockManager.getChatChannel()).thenReturn(chatChannel);
+    when(mockClient.getChannelById(chatChannel)).thenReturn(Mono.just(mockChannel));
+
+    EmbedCreateSpec embedSpec1 =
+        EmbedCreateSpec.builder()
+            .color(Color.of(255, 165, 0))
+            .title("Playback Failed - Retrying")
+            .description(
+                "An error occurred playing track: **Test Title**\n*Retrying (Attempt 1 of 2)...*")
+            .addField("Error Details", "Error message", false)
+            .build();
+    EmbedCreateSpec embedSpec2 =
+        EmbedCreateSpec.builder()
+            .color(Color.of(255, 165, 0))
+            .title("Playback Failed - Retrying")
+            .description(
+                "An error occurred playing track: **Test Title**\n*Retrying (Attempt 2 of 2)...*")
+            .addField("Error Details", "Error message", false)
+            .build();
+
+    when(mockChannel.createMessage(embedSpec1))
+        .thenReturn(MessageCreateMono.of(mockChannel).withEmbeds(embedSpec1));
+    when(mockChannel.createMessage(embedSpec2))
+        .thenReturn(MessageCreateMono.of(mockChannel).withEmbeds(embedSpec2));
+    when(mockChannel.createMessage(any(MessageCreateSpec.class))).thenReturn(Mono.empty());
+
+    scheduler.setClient(mockClient);
+    // Attempt 1 retry
+    scheduler.onTrackException(mockPlayer, mockTrack, exception);
+    // Attempt 2 retry (with clone1)
+    scheduler.onTrackException(mockPlayer, mockClone1, exception);
+
+    assertEquals(2, scheduler.getQueue().size());
+    assertEquals(mockClone2, scheduler.getQueue().get(0));
+    verify(mockChannel, times(1)).createMessage(embedSpec1);
+    verify(mockChannel, times(1)).createMessage(embedSpec2);
+  }
+
+  @Test
+  public void testOnTrackExceptionExceedsMaxRetriesSendsErrorMessage() {
+    AudioTrack mockTrack = Mockito.mock(AudioTrack.class);
+    AudioTrack mockClone1 = Mockito.mock(AudioTrack.class);
+    AudioTrack mockClone2 = Mockito.mock(AudioTrack.class);
+    AudioTrackInfo info = new AudioTrackInfo("Test Title", "Test Author", 1000L, "id", true, "url");
+    when(mockTrack.getInfo()).thenReturn(info);
+    when(mockClone1.getInfo()).thenReturn(info);
+    when(mockClone2.getInfo()).thenReturn(info);
+    when(mockTrack.makeClone()).thenReturn(mockClone1);
+    when(mockClone1.makeClone()).thenReturn(mockClone2);
+    FriendlyException exception =
+        new FriendlyException(
+            "Error message", FriendlyException.Severity.COMMON, new RuntimeException("403"));
+
+    GatewayDiscordClient mockClient = Mockito.mock(GatewayDiscordClient.class);
+    MessageChannel mockChannel = Mockito.mock(MessageChannel.class);
+    Snowflake chatChannel = Snowflake.of("987654");
+    when(mockManager.getChatChannel()).thenReturn(chatChannel);
+    when(mockClient.getChannelById(chatChannel)).thenReturn(Mono.just(mockChannel));
+
+    EmbedCreateSpec embedSpecMax =
+        EmbedCreateSpec.builder()
+            .color(Color.RED)
+            .title("Playback Failed")
+            .description("Track failed to play after 2 retries: **Test Title**")
+            .addField("Error Details", "Error message", false)
+            .build();
+
+    when(mockChannel.createMessage(embedSpecMax))
+        .thenReturn(MessageCreateMono.of(mockChannel).withEmbeds(embedSpecMax));
+    when(mockChannel.createMessage(any(MessageCreateSpec.class))).thenReturn(Mono.empty());
+
+    scheduler.setClient(mockClient);
+    // Retry 1
+    scheduler.onTrackException(mockPlayer, mockTrack, exception);
+    // Retry 2
+    scheduler.onTrackException(mockPlayer, mockClone1, exception);
+    // Exceeded max retries (cloned2 fails)
+    scheduler.onTrackException(mockPlayer, mockClone2, exception);
+
+    verify(mockChannel, times(1)).createMessage(embedSpecMax);
+  }
+
+  @Test
+  public void testOnTrackExceptionClientNullIsSafe() {
+    AudioTrack mockTrack = Mockito.mock(AudioTrack.class);
+    AudioTrack mockClone = Mockito.mock(AudioTrack.class);
+    AudioTrackInfo info = new AudioTrackInfo("Test Title", "Test Author", 1000L, "id", true, "url");
+    when(mockTrack.getInfo()).thenReturn(info);
+    when(mockTrack.makeClone()).thenReturn(mockClone);
+    FriendlyException exception =
+        new FriendlyException(
+            "Error message", FriendlyException.Severity.COMMON, new RuntimeException("403"));
+
+    scheduler.setClient(null);
+    scheduler.onTrackException(mockPlayer, mockTrack, exception);
+
+    assertEquals(1, scheduler.getQueue().size());
+    assertEquals(mockClone, scheduler.getQueue().get(0));
+  }
+
+  @Test
+  public void testOnTrackExceptionExceedsMaxRetriesClientNullIsSafe() {
+    AudioTrack mockTrack = Mockito.mock(AudioTrack.class);
+    AudioTrack mockClone1 = Mockito.mock(AudioTrack.class);
+    AudioTrack mockClone2 = Mockito.mock(AudioTrack.class);
+    AudioTrackInfo info = new AudioTrackInfo("Test Title", "Test Author", 1000L, "id", true, "url");
+    when(mockTrack.getInfo()).thenReturn(info);
+    when(mockClone1.getInfo()).thenReturn(info);
+    when(mockClone2.getInfo()).thenReturn(info);
+    when(mockTrack.makeClone()).thenReturn(mockClone1);
+    when(mockClone1.makeClone()).thenReturn(mockClone2);
+    FriendlyException exception =
+        new FriendlyException(
+            "Error message", FriendlyException.Severity.COMMON, new RuntimeException("403"));
+
+    scheduler.setClient(null);
+    // Retry 1
+    scheduler.onTrackException(mockPlayer, mockTrack, exception);
+    // Retry 2
+    scheduler.onTrackException(mockPlayer, mockClone1, exception);
+    // Exceeded max retries (cloned2 fails)
+    scheduler.onTrackException(mockPlayer, mockClone2, exception);
+
+    // Should run safely without NPE
+    assertEquals(2, scheduler.getQueue().size());
+  }
+
+  @Test
+  public void testOnTrackEndCleansUpRetries() {
+    AudioTrack mockTrack = Mockito.mock(AudioTrack.class);
+    AudioTrack mockClone1 = Mockito.mock(AudioTrack.class);
+    AudioTrack mockClone2 = Mockito.mock(AudioTrack.class);
+    AudioTrackInfo info = new AudioTrackInfo("Test Title", "Test Author", 1000L, "id", true, "url");
+    when(mockTrack.getInfo()).thenReturn(info);
+    when(mockClone1.getInfo()).thenReturn(info);
+    when(mockTrack.makeClone()).thenReturn(mockClone1);
+    when(mockClone1.makeClone()).thenReturn(mockClone2);
+    FriendlyException exception =
+        new FriendlyException(
+            "Error message", FriendlyException.Severity.COMMON, new RuntimeException("403"));
+
+    scheduler.onTrackException(mockPlayer, mockTrack, exception);
+    scheduler.onTrackEnd(mockPlayer, mockClone1, AudioTrackEndReason.FINISHED);
+    scheduler.onTrackException(mockPlayer, mockClone1, exception);
+
+    assertEquals(2, scheduler.getQueue().size());
+  }
+
+  @Test
+  public void testStopCleansUpRetries() {
+    AudioTrack mockTrack = Mockito.mock(AudioTrack.class);
+    AudioTrack mockClone1 = Mockito.mock(AudioTrack.class);
+    AudioTrack mockClone2 = Mockito.mock(AudioTrack.class);
+    AudioTrackInfo info = new AudioTrackInfo("Test Title", "Test Author", 1000L, "id", true, "url");
+    when(mockTrack.getInfo()).thenReturn(info);
+    when(mockClone1.getInfo()).thenReturn(info);
+    when(mockTrack.makeClone()).thenReturn(mockClone1);
+    when(mockClone1.makeClone()).thenReturn(mockClone2);
+    FriendlyException exception =
+        new FriendlyException(
+            "Error message", FriendlyException.Severity.COMMON, new RuntimeException("403"));
+
+    scheduler.onTrackException(mockPlayer, mockTrack, exception);
+    scheduler.stop();
+    scheduler.onTrackException(mockPlayer, mockClone1, exception);
+
+    assertEquals(1, scheduler.getQueue().size());
   }
 }
