@@ -84,7 +84,7 @@
             <dependency>
                 <groupId>dev.lavalink.youtube</groupId>
                 <artifactId>common</artifactId>
-                <version>1.18.2</version>
+                <version>2be8e542d3f6f178e048dca565892684c2e40177-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>io.projectreactor</groupId>
@@ -228,6 +228,17 @@
             <id>lavalink</id>
             <name>lavalink</name>
             <url>https://maven.lavalink.dev/releases</url>
+        </repository>
+        <repository>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+            <id>lavalink-snapshots</id>
+            <name>lavalink-snapshots</name>
+            <url>https://maven.lavalink.dev/snapshots</url>
         </repository>
         <repository>
             <releases>
