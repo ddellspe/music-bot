@@ -226,7 +226,10 @@ public class MusicAudioTrackScheduler extends AudioEventAdapter {
                                 String.format(
                                     "An error occurred playing track: **%s**\n*Retrying (Attempt %d of %d)...*",
                                     track.getInfo().title, attempts + 1, MAX_RETRIES))
-                            .addField("Error Details", exception.getMessage(), false)
+                            .addField(
+                                "Error Details",
+                                MessageUtils.truncate(exception.getMessage(), 1024),
+                                false)
                             .build()))
             .subscribe();
       }
@@ -246,7 +249,10 @@ public class MusicAudioTrackScheduler extends AudioEventAdapter {
                                 String.format(
                                     "Track failed to play after %d retries: **%s**",
                                     MAX_RETRIES, track.getInfo().title))
-                            .addField("Error Details", exception.getMessage(), false)
+                            .addField(
+                                "Error Details",
+                                MessageUtils.truncate(exception.getMessage(), 1024),
+                                false)
                             .build()))
             .subscribe();
       }

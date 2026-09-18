@@ -1,6 +1,7 @@
 package net.ddellspe.music.bot.utils;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -40,5 +41,31 @@ public class MessageUtilsTest {
   @Test
   public void testDurationOverTenHours() {
     assertEquals("12:27:11", MessageUtils.getDurationAsMinSecond(44_831_000));
+  }
+
+  @Test
+  public void testTruncateNull() {
+    assertNull(MessageUtils.truncate(null, 10));
+  }
+
+  @Test
+  public void testTruncateShorterThanMax() {
+    assertEquals("hello", MessageUtils.truncate("hello", 10));
+  }
+
+  @Test
+  public void testTruncateEqualToMax() {
+    assertEquals("hello", MessageUtils.truncate("hello", 5));
+  }
+
+  @Test
+  public void testTruncateLongerThanMax() {
+    assertEquals("hello...", MessageUtils.truncate("hello world", 8));
+  }
+
+  @Test
+  public void testTruncateSmallMaxLength() {
+    assertEquals("hel", MessageUtils.truncate("hello world", 3));
+    assertEquals("he", MessageUtils.truncate("hello world", 2));
   }
 }

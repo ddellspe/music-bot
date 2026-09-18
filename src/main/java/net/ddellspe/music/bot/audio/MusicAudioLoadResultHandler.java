@@ -263,7 +263,8 @@ public class MusicAudioLoadResultHandler implements AudioLoadResultHandler {
                     EmbedCreateSpec.builder()
                         .color(Color.RED)
                         .title("Error loading the track")
-                        .addField("Error Message", e.getMessage(), false)
+                        .addField(
+                            "Error Message", MessageUtils.truncate(e.getMessage(), 1024), false)
                         .build()))
         .subscribe();
   }

@@ -20,4 +20,25 @@ public class MessageUtils {
             ? String.format("%d:%02d", minutes, seconds)
             : String.format("%d sec.", seconds));
   }
+
+  /**
+   * Truncates a string to the specified maximum length. If the string exceeds maxLength, it will be
+   * truncated and appended with "..." such that the total length equals maxLength.
+   *
+   * @param text the text to truncate
+   * @param maxLength the maximum allowed length
+   * @return the truncated string, or null if text is null
+   */
+  public static String truncate(String text, int maxLength) {
+    if (text == null) {
+      return null;
+    }
+    if (text.length() <= maxLength) {
+      return text;
+    }
+    if (maxLength <= 3) {
+      return text.substring(0, maxLength);
+    }
+    return text.substring(0, maxLength - 3) + "...";
+  }
 }
